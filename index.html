@@ -91,38 +91,37 @@ canvas{
   transition:1s;
   white-space:pre-line;
 }
+
+/* HEARTS */
+@keyframes floatUp {
+  0% { transform: translateY(0); opacity:1; }
+  100% { transform: translateY(-120px); opacity:0; }
+}
 </style>
 </head>
 
 <body>
-
-<!-- AUDIO UNLOCK -->
-<script>
-document.addEventListener("click", () => {}, { once:true });
-</script>
 
 <!-- SCENES -->
 
 <div id="s0" class="scene active">
   <img src="image1.jpg">
   <p>Maiku and Mira enter the portal...</p>
-  <button onclick="go(1); playSFX()">Start</button>
+  <button onclick="go(1)">Start</button>
 </div>
 
 <div id="s1" class="scene">
   <h4>Sydney — Split Timeline</h4>
 
-  <p>
-    After entering the portal, Maiku and Mira landed in different locations across Sydney.
-    He must find her before time runs out.
-  </p>
+  <p>After entering the portal, Maiku and Mira landed in different locations across Sydney.
+  He must find her before time runs out.</p>
 
   <p><b>Answer the following questions correctly.</b></p>
 
   <h3 id="qtext"></h3>
   <div class="options" id="options"></div>
 
-  <button onclick="submit(); playSFX()">Submit</button>
+  <button onclick="submit()">Submit</button>
 </div>
 
 <div id="s2" class="scene">
@@ -132,7 +131,7 @@ document.addEventListener("click", () => {}, { once:true });
     <p><b>Get to the Sydney bridge safely before time runs out.</b></p>
     <p>Passenger Princess mode activated</p>
     <p style="opacity:0.8;font-size:14px;">Tap LEFT or RIGHT to steer 🚗</p>
-    <button onclick="startDrive(); playSFX()">Start Drive</button>
+    <button onclick="startDrive()">Start Drive</button>
   </div>
 
   <div id="driveGame" style="display:none;">
@@ -147,9 +146,9 @@ document.addEventListener("click", () => {}, { once:true });
     <img src="image3.jpg">
     <h3>🌉 Bridge Crossing Mission</h3>
 
-    <p><b>Instructions:</b> Keep stamina up by tapping 💖 SMOOCH</p>
+    <p><b>Instructions:</b> Keep stamina up using SMOOCH</p>
 
-    <button onclick="startBridge(); playSFX()">Start Crossing</button>
+    <button onclick="startBridge()">Start Crossing</button>
   </div>
 
   <div id="bridgeGame" style="display:none;">
@@ -157,7 +156,7 @@ document.addEventListener("click", () => {}, { once:true });
 
     <img src="image3_avatar.png" style="width:240px;height:240px;border-radius:12px;">
 
-    <button onclick="smooch(); playSFX()">💖 SMOOCH</button>
+    <button onclick="smooch()">💖 SMOOCH</button>
 
     <p>Time Left: <span id="time3">25</span></p>
   </div>
@@ -168,26 +167,6 @@ document.addEventListener("click", () => {}, { once:true });
   <div id="finalText"></div>
 </div>
 
-<!-- AUDIO -->
-<script>
-const bgm = new Audio();
-bgm.loop = true;
-
-function playBGM(src){
-  if(!src) return;
-  bgm.pause();
-  bgm.src = src;
-  bgm.volume = 0.4;
-  bgm.play().catch(()=>{});
-}
-
-function playSFX(){
-  const s = new Audio("click.mp3");
-  s.volume = 0.7;
-  s.play().catch(()=>{});
-}
-</script>
-
 <script>
 
 /* NAV */
@@ -196,7 +175,7 @@ function go(n){
   document.getElementById("s"+n).classList.add("active");
 }
 
-/* SCENE 1 */
+/* ================= SCENE 1 ================= */
 let qs=[
 ["Mira ice cream?",["chocolate","strawberry","rocky road"],"chocolate"],
 ["Comfort dish?",["soupy dishes","chicken","sushi"],"soupy dishes"],
@@ -210,11 +189,11 @@ let qs=[
 let i=0, selected="";
 
 function showQ(){
-  const q = qs[i];
-  document.getElementById("qtext").innerText = q[0];
+  const q=qs[i];
+  document.getElementById("qtext").innerText=q[0];
 
-  const box = document.getElementById("options");
-  box.innerHTML = "";
+  const box=document.getElementById("options");
+  box.innerHTML="";
 
   q[1].forEach(opt=>{
     let d=document.createElement("div");
@@ -227,12 +206,12 @@ function showQ(){
 
 function submit(){
   if(!selected) return;
-  if(selected !== qs[i][2]) return;
+  if(selected!==qs[i][2]) return;
 
   selected="";
   i++;
 
-  if(i >= qs.length){
+  if(i>=qs.length){
     go(2);
     return;
   }
@@ -242,10 +221,12 @@ function submit(){
 
 showQ();
 
-/* SCENE 2 */
-let carX=120, obs=[], run=false, ctx, time=30, driveInterval;
+/* ================= DRIVING ================= */
+let carX=120, obs=[], run=false, ctx, time=30, driveInterval, last10=false;
 
 function startDrive(){
+
+  go(2);
 
   document.getElementById("driveIntro").style.display="none";
   document.getElementById("driveGame").style.display="block";
@@ -255,25 +236,28 @@ function startDrive(){
   run=true;
   time=30;
   carX=120;
+  last10=false;
 
   obs=[
     {x:50,y:-80},
     {x:120,y:-160},
     {x:200,y:-240},
     {x:80,y:-320},
-    {x:160,y:-400},
-    {x:100,y:-480},
-    {x:180,y:-560}
+    {x:160,y:-400}
   ];
 
   clearInterval(driveInterval);
+
   driveInterval=setInterval(()=>{
     if(!run) return;
 
     time--;
     document.getElementById("time").innerText=time;
 
+    if(time<=10) last10=true;
+
     if(time<=0) crash();
+
   },1000);
 
   loop();
@@ -323,6 +307,7 @@ function loop(){
 
   for(let o of obs){
     o.y+=4;
+
     ctx.fillRect(o.x,o.y,30,30);
 
     if(o.y>320 && o.y<360 && o.x<carX+40 && o.x+30>carX){
@@ -331,13 +316,18 @@ function loop(){
     }
   }
 
+  if(last10 && Math.random()<0.08){
+    obs.push({x:Math.random()*260,y:-60});
+  }
+
   requestAnimationFrame(loop);
 }
 
-/* SCENE 3 */
+/* ================= STAMINA ================= */
 let stamina=100, time3=25, bridgeInterval;
 
 function startBridge(){
+
   stamina=100;
   time3=25;
 
@@ -347,49 +337,75 @@ function startBridge(){
   clearInterval(bridgeInterval);
 
   bridgeInterval=setInterval(()=>{
+
     time3--;
-    stamina=Math.max(0, stamina-8);
+    stamina=Math.max(0, stamina-12);
 
     document.getElementById("fill").style.width=stamina+"%";
     document.getElementById("time3").innerText=time3;
 
     if(stamina<=0 || time3<=0){
+
       clearInterval(bridgeInterval);
-      showFinal();
+
+      document.getElementById("bridgeGame").innerHTML =
+        "<h2 style='color:#9cffb0'>SUCCESS</h2>";
+
+      setTimeout(showFinal,2000);
     }
+
   },1000);
 }
 
 function smooch(){
-  stamina=Math.min(100, stamina+15);
+
+  stamina=Math.min(100, stamina+10);
+
+  stamina -= 2;
+
+  let h=document.createElement("div");
+  h.innerText="💖";
+  h.style.position="absolute";
+  h.style.left=(window.innerWidth/2+(Math.random()*120-60))+"px";
+  h.style.top=(window.innerHeight/2+80)+"px";
+  h.style.animation="floatUp 0.8s linear forwards";
+  h.style.fontSize="20px";
+
+  document.body.appendChild(h);
+
+  setTimeout(()=>h.remove(),800);
 }
 
-/* FINAL (LOCKED) */
+/* ================= FINAL ================= */
 function showFinal(){
 
   go(4);
 
-  let text =
+  setTimeout(()=>{
+
+    let text =
 `This is the beginning of our adventure together,
 No pressure, no expectations~
 Let's enjoy our first ever weekend together, hoping it might unlock more opportunities to spend time with each other.
 Hang in there a little longer, babe,
 Questions will be answered, doubts will be clarified, clarity will come within reach, and the longing will soon subside...`;
 
-  let el=document.getElementById("finalText");
-  el.innerHTML="";
+    let el=document.getElementById("finalText");
+    el.innerHTML="";
 
-  let p=document.createElement("p");
-  p.innerText=text;
+    let p=document.createElement("p");
+    p.innerText=text;
 
-  el.appendChild(p);
+    el.appendChild(p);
 
-  requestAnimationFrame(()=>{
-    setTimeout(()=>{
-      p.style.opacity="1";
-      p.style.transform="translateY(0)";
-    },50);
-  });
+    requestAnimationFrame(()=>{
+      setTimeout(()=>{
+        p.style.opacity="1";
+        p.style.transform="translateY(0)";
+      },50);
+    });
+
+  },2000);
 }
 
 </script>
