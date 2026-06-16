@@ -4,31 +4,24 @@
 <meta charset="UTF-8">
 <title>Maiku x Mira VN</title>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-html, body{
+body{
   margin:0;
-  padding:0;
-  width:100%;
-  height:100%;
   background:#111;
   color:#fff;
   font-family:Georgia, serif;
   overflow:hidden;
-  touch-action:none;
 }
 
 .scene{
   display:none;
   height:100vh;
   width:100vw;
-  position:absolute;
-  top:0;
-  left:0;
   flex-direction:column;
   align-items:center;
-  justify-content:flex-start;
+  justify-content:center;
   padding:20px;
   box-sizing:border-box;
   text-align:center;
@@ -38,24 +31,19 @@ html, body{
   display:flex;
 }
 
-#s0{
-  justify-content:center;
-  align-items:center;
-}
-
 img{
-  width:min(95vw,520px);
-  max-height:50vh;
+  width:min(90vw,520px);
+  max-height:40vh;
   object-fit:cover;
   border-radius:12px;
   margin-bottom:10px;
 }
 
 button{
-  padding:12px 16px;
+  padding:10px 14px;
   margin:8px;
-  font-size:16px;
   cursor:pointer;
+  font-size:16px;
 }
 
 .options{
@@ -63,6 +51,7 @@ button{
   flex-wrap:wrap;
   justify-content:center;
   gap:10px;
+  max-width:600px;
 }
 
 .card{
@@ -84,7 +73,6 @@ canvas{
   background:#333;
   border-radius:10px;
   overflow:hidden;
-  margin:0 auto;
 }
 
 #fill{
@@ -95,15 +83,13 @@ canvas{
 
 #finalText{
   max-width:650px;
-  width:100%;
   padding:20px;
-  text-align:justify;
   line-height:1.8;
 }
 
 #finalText p{
   opacity:0;
-  transform:translateY(20px);
+  transform:translateY(18px);
   transition:1.2s;
   white-space:pre-line;
 }
@@ -112,59 +98,34 @@ canvas{
 
 <body>
 
-<!-- AUDIO -->
+<!-- AUDIO LAYER -->
 <audio id="bgm" loop></audio>
 <audio id="sfx"></audio>
 
-<script>
-const bgm = document.getElementById("bgm");
-const sfx = document.getElementById("sfx");
-
-function playSFX(file){
-  sfx.src = file;
-  sfx.currentTime = 0;
-  sfx.play();
-}
-
-function playBGM(file){
-  if(bgm.src.includes(file)) return;
-  bgm.src = file;
-  bgm.volume = 0.4;
-  bgm.play();
-}
-</script>
-
 <!-- SCENES -->
 
-<!-- SCENE 0 -->
 <div id="s0" class="scene active">
   <img src="image1.jpg">
   <p>Maiku and Mira enter the portal...</p>
-  <button onclick="playSFX('click.mp3'); playBGM('bgm_portal.mp3'); go(1)">Start</button>
+  <button onclick="go(1); playSFX('click.mp3'); playBGM('portal.mp3')">Start</button>
 </div>
 
-<!-- SCENE 1 -->
 <div id="s1" class="scene">
-
   <h4>Sydney — Split Timeline</h4>
-
-  <p>Answer all questions correctly.</p>
+  <p>Answer the following questions correctly.</p>
 
   <h3 id="qtext"></h3>
   <div class="options" id="options"></div>
 
-  <button onclick="submit()">Submit</button>
+  <button onclick="submit(); playSFX('click.mp3')">Submit</button>
 </div>
 
-<!-- SCENE 2 -->
 <div id="s2" class="scene">
-
   <img src="image2.jpg">
 
   <div id="driveIntro">
     <p>Passenger Princess mode activated</p>
-    <p>Tap LEFT or RIGHT to steer 🚗</p>
-    <button onclick="startDrive()">Start Drive</button>
+    <button onclick="startDrive(); playSFX('click.mp3'); playBGM('drive.mp3')">Start Drive</button>
   </div>
 
   <div id="driveGame" style="display:none;">
@@ -173,14 +134,13 @@ function playBGM(file){
   </div>
 </div>
 
-<!-- SCENE 3 -->
 <div id="s3" class="scene">
 
   <div id="bridgeIntro">
     <img src="image3.jpg">
-    <h3>🌉 Bridge Mission</h3>
-    <p>Get to Sydney bridge safely before time runs out.</p>
-    <button onclick="startBridge()">Start</button>
+    <h3>🌉 Bridge Crossing Mission</h3>
+    <p>Get to the Sydney bridge safely before time runs out.</p>
+    <button onclick="startBridge(); playSFX('click.mp3'); playBGM('bridge.mp3')">Start Crossing</button>
   </div>
 
   <div id="bridgeGame" style="display:none;">
@@ -188,13 +148,12 @@ function playBGM(file){
 
     <img src="image3_avatar.png" style="width:240px;height:240px;border-radius:12px;">
 
-    <button onclick="smooch()">💖 SMOOCH</button>
+    <button onclick="smooch(); playSFX('click.mp3')">💖 SMOOCH</button>
 
     <p>Time Left: <span id="time3">25</span></p>
   </div>
 </div>
 
-<!-- SCENE 4 -->
 <div id="s4" class="scene">
   <img src="image4.jpg">
   <div id="finalText"></div>
@@ -202,14 +161,31 @@ function playBGM(file){
 
 <script>
 
+/* AUDIO */
+const bgm = document.getElementById("bgm");
+const sfx = document.getElementById("sfx");
+
+function playBGM(file){
+  if(!file) return;
+  bgm.src = file;
+  bgm.volume = 0.4;
+  bgm.play().catch(()=>{});
+}
+
+function playSFX(file){
+  if(!file) return;
+  sfx.src = file;
+  sfx.volume = 0.6;
+  sfx.play().catch(()=>{});
+}
+
 /* NAV */
 function go(n){
   document.querySelectorAll(".scene").forEach(s=>s.classList.remove("active"));
   document.getElementById("s"+n).classList.add("active");
 }
 
-/* ================= SCENE 1 ================= */
-
+/* SCENE 1 */
 let qs=[
 ["Mira ice cream?",["chocolate","strawberry","rocky road"],"chocolate"],
 ["Comfort dish?",["soupy dishes","chicken","sushi"],"soupy dishes"],
@@ -224,10 +200,10 @@ let i=0;
 let selected="";
 
 function showQ(){
-  let q=qs[i];
+  const q=qs[i];
   document.getElementById("qtext").innerText=q[0];
 
-  let box=document.getElementById("options");
+  const box=document.getElementById("options");
   box.innerHTML="";
 
   q[1].forEach(opt=>{
@@ -240,12 +216,13 @@ function showQ(){
 }
 
 function submit(){
+  if(!selected) return;
   if(selected !== qs[i][2]) return;
 
-  i++;
   selected="";
+  i++;
 
-  if(i >= qs.length){
+  if(i>=qs.length){
     go(2);
     return;
   }
@@ -255,8 +232,7 @@ function submit(){
 
 showQ();
 
-/* ================= SCENE 2 ================= */
-
+/* SCENE 2 */
 let carX=120;
 let obs=[];
 let run=false;
@@ -265,8 +241,6 @@ let time=30;
 let driveInterval=null;
 
 function startDrive(){
-
-  playBGM("bgm_drive.mp3");
 
   document.getElementById("driveIntro").style.display="none";
   document.getElementById("driveGame").style.display="block";
@@ -283,8 +257,8 @@ function startDrive(){
     {x:200,y:-240},
     {x:80,y:-320},
     {x:160,y:-400},
-    {x:220,y:-480},
-    {x:60,y:-560}
+    {x:100,y:-480},
+    {x:180,y:-560}
   ];
 
   if(driveInterval) clearInterval(driveInterval);
@@ -306,7 +280,6 @@ function startDrive(){
 
 function resetDrive(){
   run=false;
-
   clearInterval(driveInterval);
 
   carX=120;
@@ -354,21 +327,18 @@ function loop(){
   requestAnimationFrame(loop);
 }
 
-/* ================= SCENE 3 ================= */
-
+/* SCENE 3 */
 let stamina=100;
 let time3=25;
 let bridgeInterval=null;
 
 function startBridge(){
 
-  playBGM("bgm_bridge.mp3");
+  stamina=100;
+  time3=25;
 
   document.getElementById("bridgeIntro").style.display="none";
   document.getElementById("bridgeGame").style.display="block";
-
-  stamina=100;
-  time3=25;
 
   if(bridgeInterval) clearInterval(bridgeInterval);
 
@@ -382,7 +352,6 @@ function startBridge(){
     if(time3<=0){
       clearInterval(bridgeInterval);
       playSFX("success.mp3");
-      playBGM("bgm_final.mp3");
       showFinal();
     }
   },1000);
@@ -392,12 +361,17 @@ function smooch(){
   stamina=Math.min(100, stamina+15);
 }
 
-/* ================= FINAL ================= */
-
+/* FINAL */
 function showFinal(){
+
   go(4);
 
-  let text=`This is the beginning of our adventure together...`;
+  let text =
+`This is the beginning of our adventure together,
+No pressure, no expectations~
+Let's enjoy our first ever weekend together, hoping it might unlock more opportunities to spend time with each other.
+Hang in there a little longer, babe,
+Questions will be answered, doubts will be clarified, clarity will come within reach, and the longing will soon subside...`;
 
   let el=document.getElementById("finalText");
   el.innerHTML="";
@@ -407,7 +381,12 @@ function showFinal(){
 
   el.appendChild(p);
 
-  setTimeout(()=>p.style.opacity=1,100);
+  requestAnimationFrame(()=>{
+    setTimeout(()=>{
+      p.style.opacity="1";
+      p.style.transform="translateY(0)";
+    },50);
+  });
 }
 
 </script>
