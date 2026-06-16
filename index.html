@@ -91,6 +91,19 @@ canvas{
   white-space:pre-line;
 }
 
+/* hearts */
+.heart{
+  position:absolute;
+  font-size:20px;
+  animation:floatUp 1s ease-out forwards;
+  pointer-events:none;
+}
+
+@keyframes floatUp{
+  0%{opacity:1; transform:translateY(0);}
+  100%{opacity:0; transform:translateY(-60px);}
+}
+
 #bridgeOverlay{
   display:none;
   position:absolute;
@@ -107,14 +120,22 @@ canvas{
 
 <body>
 
+<!-- SCENE 0 -->
 <div id="s0" class="scene active">
   <img src="image1.jpg">
   <p>Maiku and Mira enter the portal...</p>
   <button onclick="go(1)">Start</button>
 </div>
 
+<!-- SCENE 1 -->
 <div id="s1" class="scene">
   <h4>Sydney — Split Timeline</h4>
+
+  <p>
+  Maiku and Mira have landed in different locations after passing through the portal.<br>
+  Separated across timelines, they must reconnect by decoding memory fragments.
+  </p>
+
   <p>Answer the following questions correctly.</p>
 
   <h3 id="qtext"></h3>
@@ -123,10 +144,17 @@ canvas{
   <button onclick="submit()">Submit</button>
 </div>
 
+<!-- SCENE 2 -->
 <div id="s2" class="scene">
+
   <img src="image2.jpg">
 
   <div id="driveIntro">
+    <p><b>Passenger Princess Mode Unlocked.</b></p>
+    <p>
+      Maiku has taken the wheel.<br>
+      Mira is now safely on board — but the journey is far from over.
+    </p>
     <p><b>Get to the Sydney bridge safely before time runs out.</b></p>
     <button onclick="startDrive()">Start Drive</button>
   </div>
@@ -137,15 +165,21 @@ canvas{
   </div>
 </div>
 
+<!-- SCENE 3 -->
 <div id="s3" class="scene" style="position:relative;">
 
   <div id="bridgeIntro">
     <img src="image3.jpg">
     <h3>🌉 Bridge Crossing Mission</h3>
+    <p>
+      Help Mira overcome her fear of heights and cross the bridge safely.<br>
+      Tap 💖 SMOOCH to restore stamina.
+    </p>
     <button onclick="startBridge()">Start Crossing</button>
   </div>
 
   <div id="bridgeGame" style="display:none;">
+
     <div id="bar"><div id="fill"></div></div>
 
     <img src="image3_avatar.png" style="width:240px;height:240px;border-radius:12px;">
@@ -158,6 +192,7 @@ canvas{
   </div>
 </div>
 
+<!-- SCENE 4 -->
 <div id="s4" class="scene">
   <img src="image4.jpg">
   <div id="finalText"></div>
@@ -171,8 +206,7 @@ function go(n){
   document.getElementById("s"+n).classList.add("active");
 }
 
-/* ================= SCENE 1 ================= */
-
+/* SHUFFLE */
 function shuffle(arr){
   let a=[...arr];
   for(let i=a.length-1;i>0;i--){
@@ -182,6 +216,7 @@ function shuffle(arr){
   return a;
 }
 
+/* SCENE 1 */
 let qs=[
 ["Mira ice cream?",["chocolate","strawberry","rocky road"],"chocolate"],
 ["Comfort dish?",["soupy dishes","chicken","sushi"],"soupy dishes"],
@@ -227,8 +262,7 @@ function submit(){
 
 showQ();
 
-/* ================= DRIVING ================= */
-
+/* SCENE 2 */
 let carX=120, obs=[], run=false, ctx, time=30;
 let driveInterval=null;
 let anim=null;
@@ -254,7 +288,6 @@ function startDrive(){
   ];
 
   driveInterval=setInterval(()=>{
-
     if(!run) return;
 
     time--;
@@ -281,14 +314,11 @@ function stopDrive(){
 
 function crash(){
   stopDrive();
-  setTimeout(()=>{
-    resetDrive();
-  },300);
+  setTimeout(()=>resetDrive(),300);
 }
 
 function resetDrive(){
   stopDrive();
-
   carX=120;
   obs=[];
   time=30;
@@ -339,8 +369,7 @@ function loop(){
   anim=requestAnimationFrame(loop);
 }
 
-/* ================= BRIDGE ================= */
-
+/* SCENE 3 */
 let stamina=100, time3=25;
 let bridgeInterval=null;
 
@@ -381,7 +410,6 @@ function failBridge(msg){
   clearInterval(bridgeInterval);
 
   const overlay=document.getElementById("bridgeOverlay");
-
   overlay.style.display="flex";
   overlay.innerHTML=msg;
 
@@ -394,11 +422,22 @@ function failBridge(msg){
 }
 
 function smooch(){
+
   stamina=Math.min(100, stamina+10);
+
+  const heart=document.createElement("div");
+  heart.className="heart";
+  heart.innerText="💖";
+
+  document.getElementById("bridgeGame").appendChild(heart);
+
+  heart.style.left=(Math.random()*80+10)+"%";
+  heart.style.top="60%";
+
+  setTimeout(()=>heart.remove(),1000);
 }
 
-/* ================= FINAL ================= */
-
+/* FINAL */
 function showFinal(){
 
   go(4);
@@ -411,7 +450,7 @@ function showFinal(){
 No pressure, no expectations~
 Let's enjoy our first ever weekend together, hoping it might unlock more opportunities to spend time with each other.
 Hang in there a little longer, babe,
-Questions will be answered, doubts will be clarified...`;
+Questions will be answered, doubts will be clarified, and longing will subside.`;
 
   let p=document.createElement("p");
   p.innerText=text;
