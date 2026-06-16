@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Maiku x Mira VN</title>
+
+<style>
+body{
+  margin:0;
+  background:#111;
+  color:#fff;
+  font-family:Georgia, serif;
+  overflow:auto;
+}
+
+.scene{
+  display:none;
+  height:100vh;
+  width:100vw;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  box-sizing:border-box;
+  text-align:center;
+}
+
+.scene.active{
+  display:flex;
+}
+
+img{
+  width:min(90vw,520px);
+  max-height:40vh;
+  object-fit:cover;
+  border-radius:12px;
+  margin-bottom:10px;
+}
+
+button{
+  padding:10px 14px;
+  margin:8px;
+  cursor:pointer;
+  font-size:16px;
+}
+
+.options{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:10px;
+  max-width:600px;
+}
+
+.card{
+  background:#222;
+  padding:10px;
+  border-radius:8px;
+  cursor:pointer;
+  min-width:120px;
+}
+
+canvas{
+  background:#111;
+  border-radius:8px;
+}
+
+#bar{
+  width:80%;
+  height:16px;
+  background:#333;
+  border-radius:10px;
+  overflow:hidden;
+  margin:0 auto;
+}
+
+#fill{
+  height:100%;
+  width:100%;
+  background:limegreen;
+  transition:0.2s;
+}
+
+#finalText{
+  max-width:650px;
+  width:100%;
+  padding:20px;
+  box-sizing:border-box;
+  text-align:justify;
+  line-height:1.8;
+}
+
+#finalText p{
+  opacity:0;
+  transform:translateY(18px);
+  transition: all 1.4s ease;
+  font-size:1.1rem;
+  white-space:pre-line;
+}
+</style>
+</head>
+
+<body>
+
+<!-- SCENE 0 -->
+<div id="s0" class="scene active">
+  <img src="image1.jpg">
+  <p>Maiku and Mira enter the portal...</p>
+  <button onclick="go(1)">Start</button>
+</div>
+
+<!-- SCENE 1 -->
+<div id="s1" class="scene">
+
+  <h4>Sydney — Split Timeline</h4>
+
+  <p>
+    After entering the portal, Maiku and Mira landed in different locations across Sydney.
+    He must find her before time runs out.
+  </p>
+
+  <h3 id="qtext"></h3>
+  <div class="options" id="options"></div>
+
+  <button onclick="submit()">Submit</button>
+</div>
+
+<!-- SCENE 2 -->
+<div id="s2" class="scene">
+
+  <img src="image2.jpg">
+
+  <div id="driveIntro">
+    <p>Passenger Princess mode activated</p>
+    <p style="opacity:0.8;font-size:14px;">Tap LEFT or RIGHT to steer 🚗</p>
+    <button onclick="startDrive()">Start Drive</button>
+  </div>
+
+  <div id="driveGame" style="display:none;">
+    <canvas id="game2" width="300" height="400"></canvas>
+    <p>Time: <span id="time">30</span></p>
+  </div>
+</div>
+
+<!-- SCENE 3 -->
+<div id="s3" class="scene">
+
+  <div id="bridgeIntro">
+    <img src="image3.jpg">
+    <h3>🌉 Bridge Crossing Mission</h3>
+    <p>Get to the Sydney bridge safely before time runs out.</p>
+    <p>Help Mira overcome her fear of heights and safely cross the bridge.</p>
+    <button onclick="showBridgeStart()">Start Crossing</button>
+  </div>
+
+  <div id="bridgeStart" style="display:none;">
+    <p>Ready?</p>
+    <button onclick="startBridge()">Begin</button>
+  </div>
+
+  <div id="bridgeGame" style="display:none;">
+    <div id="bar"><div id="fill"></div></div>
+
+    <div id="hearts"></div>
+
+    <img src="image3_avatar.png"
+         style="width:240px;height:240px;border-radius:12px;">
+
+    <button onclick="smooch()">💖 SMOOCH</button>
+
+    <p>Time Left: <span id="time3">25</span></p>
+
+    <h2 id="successMsg" style="display:none;color:#9cffb0;">SUCCESS</h2>
+  </div>
+</div>
+
+<!-- SCENE 4 -->
+<div id="s4" class="scene">
+
+<img src="image4.jpg" style="margin-top:60px; margin-bottom:10px;">
+
+<div id="finalText"></div>
+
+</div>
+
+<script>
+
+/* NAV */
+function go(n){
+  document.querySelectorAll(".scene").forEach(s=>s.classList.remove("active"));
+  document.getElementById("s"+n).classList.add("active");
+}
+
+/* ================= SCENE 1 ================= */
+
+let qs=[
+["Mira’s favourite ice cream?",["chocolate","strawberry","rocky road"],"chocolate"],
+["Mira’s comfort dish?",["soupy dishes","chicken","sushi"],"soupy dishes"],
+["Mira’s fast food?",["burger","tacos","pizza"],"pizza"],
+["Mira’s expression?",["ayioo","omg","wtf"],"ayioo"],
+["Mira’s favourite subject?",["math","history","language"],"math"],
+["When overthinking she usually?",["talk more","keep quiet","sleep"],"keep quiet"],
+["What does she like most about Maiku?",["brain","humor","sweetness","genuine intentions","all of the above"],"all of the above"]
+];
+
+let i=0;
+let selected="";
+
+function showQ(){
+  let q=qs[i];
+  document.getElementById("qtext").innerText=q[0];
+
+  let box=document.getElementById("options");
+  box.innerHTML="";
+
+  q[1].forEach(opt=>{
+    let d=document.createElement("div");
+    d.className="card";
+    d.innerText=opt;
+    d.onclick=()=>selected=opt;
+    box.appendChild(d);
+  });
+}
+
+function submit(){
+  if(selected===qs[i][2]){
+    i++;
+    selected="";
+    if(i>=qs.length) go(2);
+    else showQ();
+  } else {
+    alert("Try again");
+  }
+}
+
+showQ();
+
+/* ================= SCENE 2 ================= */
+
+let carX=120;
+let obs=[];
+let run=false;
+let ctx2;
+let timeLeft=30;
+
+function resetDrive(){
+  run=false;
+  carX=120;
+  obs=[];
+  timeLeft=30;
+
+  document.getElementById("driveIntro").style.display="block";
+  document.getElementById("driveGame").style.display="none";
+}
+
+function startDrive(){
+
+  document.getElementById("driveIntro").style.display="none";
+  document.getElementById("driveGame").style.display="block";
+
+  ctx2=document.getElementById("game2").getContext("2d");
+
+  run=true;
+  timeLeft=30;
+  carX=120;
+
+  obs=[
+    {x:70,y:-120},
+    {x:150,y:-260},
+    {x:220,y:-400}
+  ];
+
+  setInterval(()=>{
+    if(!run) return;
+    timeLeft--;
+    document.getElementById("time").innerText=timeLeft;
+
+    if(timeLeft<=0){
+      resetDrive();
+      go(3);
+    }
+  },1000);
+
+  loopDrive();
+}
+
+document.getElementById("game2").addEventListener("click",(e)=>{
+  if(!run) return;
+
+  let x=e.clientX-e.target.getBoundingClientRect().left;
+  carX += (x<150?-20:20);
+  carX=Math.max(0,Math.min(260,carX));
+});
+
+function loopDrive(){
+
+  if(!run) return;
+
+  ctx2.fillStyle="#111";
+  ctx2.fillRect(0,0,300,400);
+
+  ctx2.fillStyle="#333";
+  ctx2.fillRect(50,0,200,400);
+
+  ctx2.fillStyle="#00d4ff";
+  ctx2.fillRect(carX,340,40,18);
+
+  ctx2.fillStyle="red";
+
+  for(let o of obs){
+    o.y+=4;
+    ctx2.fillRect(o.x,o.y,30,30);
+
+    if(o.y>320 && o.y<360 && o.x<carX+40 && o.x+30>carX){
+      resetDrive();
+      alert("Crash!");
+      return;
+    }
+  }
+
+  requestAnimationFrame(loopDrive);
+}
+
+/* ================= SCENE 3 ================= */
+
+let bridgeRun=false;
+let stamina=100;
+let time3=25;
+let interval;
+
+function showBridgeStart(){
+  document.getElementById("bridgeIntro").style.display="none";
+  document.getElementById("bridgeStart").style.display="block";
+}
+
+function startBridge(){
+
+  bridgeRun=true;
+  stamina=100;
+  time3=25;
+
+  document.getElementById("bridgeStart").style.display="none";
+  document.getElementById("bridgeGame").style.display="block";
+
+  interval=setInterval(()=>{
+
+    time3--;
+    stamina=Math.max(0, stamina-8);
+
+    document.getElementById("fill").style.width=stamina+"%";
+    document.getElementById("time3").innerText=time3;
+
+    if(time3<=0){
+      clearInterval(interval);
+      bridgeRun=false;
+      document.getElementById("successMsg").style.display="block";
+      setTimeout(()=>showFinal(),1200);
+    }
+
+  },1000);
+}
+
+function smooch(){
+  if(!bridgeRun) return;
+  stamina=Math.min(100, stamina+15);
+
+  let h=document.createElement("span");
+  h.innerText="💖";
+  document.getElementById("hearts").appendChild(h);
+  setTimeout(()=>h.remove(),800);
+}
+
+/* ================= FINAL ================= */
+
+function showFinal(){
+
+  go(4);
+
+  let text =
+`This is the beginning of our adventure together,
+No pressure, no expectations~
+Let's enjoy our first ever weekend together, hoping it might unlock more opportunities to spend time with each other.
+Hang in there a little longer, babe,
+Questions will be answered, doubts will be clarified, clarity will come within reach, and the longing will soon subside...`;
+
+  let el=document.getElementById("finalText");
+  el.innerHTML="";
+
+  let p=document.createElement("p");
+  p.innerText=text;
+
+  el.appendChild(p);
+
+  setTimeout(()=>{
+    p.style.opacity="1";
+    p.style.transform="translateY(0)";
+  },100);
+}
+
+</script>
+
+</body>
+</html>
