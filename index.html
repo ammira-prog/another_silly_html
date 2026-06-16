@@ -4,12 +4,9 @@
 <meta charset="UTF-8">
 <title>Maiku x Mira VN</title>
 
-<!-- MOBILE FIX: prevents zoom/squish -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <style>
-
-/* ================= GLOBAL FIX ================= */
 
 html, body{
   margin:0;
@@ -23,8 +20,6 @@ html, body{
   color:#fff;
   font-family:Georgia, serif;
 }
-
-/* ================= SCENES ================= */
 
 .scene{
   display:none;
@@ -50,7 +45,11 @@ html, body{
   display:flex;
 }
 
-/* ================= IMAGES ================= */
+/* ✅ FIX 1: center intro image ONLY */
+#s0{
+  justify-content:center;
+  align-items:center;
+}
 
 img{
   width:min(95vw,520px);
@@ -59,8 +58,6 @@ img{
   border-radius:12px;
   margin-bottom:10px;
 }
-
-/* ================= UI ================= */
 
 button{
   padding:12px 16px;
@@ -129,17 +126,23 @@ canvas{
 
 <body>
 
+<!-- AUDIO -->
+<audio id="bgm" loop></audio>
+
 <!-- SCENE 0 -->
 <div id="s0" class="scene active">
   <img src="image1.jpg">
   <p>Maiku and Mira enter the portal...</p>
-  <button onclick="go(1)">Start</button>
+  <button onclick="playClick(); go(1); startBGM();">Start</button>
 </div>
 
 <!-- SCENE 1 -->
 <div id="s1" class="scene">
 
   <h4>Sydney — Split Timeline</h4>
+
+  <!-- ✅ FIX 2: added instruction -->
+  <p>Answer the following questions correctly.</p>
 
   <p>
     After entering the portal, Maiku and Mira landed in different locations across Sydney.
@@ -149,7 +152,7 @@ canvas{
   <h3 id="qtext"></h3>
   <div class="options" id="options"></div>
 
-  <button onclick="submit()">Submit</button>
+  <button onclick="playClick(); submit()">Submit</button>
 </div>
 
 <!-- SCENE 2 -->
@@ -160,7 +163,7 @@ canvas{
   <div id="driveIntro">
     <p>Passenger Princess mode activated</p>
     <p style="opacity:0.8;font-size:14px;">Tap LEFT or RIGHT to steer 🚗</p>
-    <button onclick="startDrive()">Start Drive</button>
+    <button onclick="playClick(); startDrive()">Start Drive</button>
   </div>
 
   <div id="driveGame" style="display:none;">
@@ -177,23 +180,21 @@ canvas{
     <h3>🌉 Bridge Crossing Mission</h3>
     <p>Get to the Sydney bridge safely before time runs out.</p>
     <p>Help Mira overcome her fear of heights and safely cross the bridge.</p>
-    <button onclick="showBridgeStart()">Start Crossing</button>
+    <button onclick="playClick(); showBridgeStart()">Start Crossing</button>
   </div>
 
   <div id="bridgeStart" style="display:none;">
     <p>Ready?</p>
-    <button onclick="startBridge()">Begin</button>
+    <button onclick="playClick(); startBridge()">Begin</button>
   </div>
 
   <div id="bridgeGame" style="display:none;">
     <div id="bar"><div id="fill"></div></div>
-
     <div id="hearts"></div>
 
-    <img src="image3_avatar.png"
-         style="width:240px;height:240px;border-radius:12px;">
+    <img src="image3_avatar.png" style="width:240px;height:240px;border-radius:12px;">
 
-    <button onclick="smooch()">💖 SMOOCH</button>
+    <button onclick="playClick(); smooch()">💖 SMOOCH</button>
 
     <p>Time Left: <span id="time3">25</span></p>
 
@@ -212,7 +213,54 @@ canvas{
 
 <script>
 
-/* NAV */
+/* ================= AUDIO SYSTEM (NO FILES NEEDED) ================= */
+
+let audioCtx;
+
+function initAudio(){
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function playClick(){
+  if(!audioCtx) initAudio();
+
+  let osc = audioCtx.createOscillator();
+  let gain = audioCtx.createGain();
+
+  osc.type = "triangle";
+  osc.frequency.value = 600;
+
+  gain.gain.value = 0.05;
+
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.08);
+}
+
+function startBGM(){
+  if(!audioCtx) initAudio();
+
+  let osc = audioCtx.createOscillator();
+  let gain = audioCtx.createGain();
+
+  osc.type = "sine";
+  osc.frequency.value = 220;
+
+  gain.gain.value = 0.02;
+
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc.start();
+
+  // store so it keeps playing quietly
+  window.bgmOsc = osc;
+}
+
+/* ================= NAV ================= */
+
 function go(n){
   document.querySelectorAll(".scene").forEach(s=>s.classList.remove("active"));
   document.getElementById("s"+n).classList.add("active");
@@ -270,16 +318,6 @@ let run=false;
 let ctx2;
 let timeLeft=30;
 
-function resetDrive(){
-  run=false;
-  carX=120;
-  obs=[];
-  timeLeft=30;
-
-  document.getElementById("driveIntro").style.display="block";
-  document.getElementById("driveGame").style.display="none";
-}
-
 function startDrive(){
 
   document.getElementById("driveIntro").style.display="none";
@@ -291,10 +329,13 @@ function startDrive(){
   timeLeft=30;
   carX=120;
 
+  /* ✅ FIX 3: MORE OBSTACLES */
   obs=[
-    {x:70,y:-120},
-    {x:150,y:-260},
-    {x:220,y:-400}
+    {x:60,y:-80},
+    {x:120,y:-160},
+    {x:200,y:-240},
+    {x:80,y:-320},
+    {x:160,y:-420}
   ];
 
   setInterval(()=>{
@@ -303,7 +344,6 @@ function startDrive(){
     document.getElementById("time").innerText=timeLeft;
 
     if(timeLeft<=0){
-      resetDrive();
       go(3);
     }
   },1000);
@@ -339,8 +379,7 @@ function loopDrive(){
     ctx2.fillRect(o.x,o.y,30,30);
 
     if(o.y>320 && o.y<360 && o.x<carX+40 && o.x+30>carX){
-      resetDrive();
-      alert("Crash!");
+      go(3);
       return;
     }
   }
@@ -348,7 +387,7 @@ function loopDrive(){
   requestAnimationFrame(loopDrive);
 }
 
-/* ================= SCENE 3 ================= */
+/* ================= SCENE 3 (UNCHANGED) ================= */
 
 let bridgeRun=false;
 let stamina=100;
@@ -406,7 +445,9 @@ function showFinal(){
   let text =
 `This is the beginning of our adventure together,
 No pressure, no expectations~
-Let's enjoy our first ever weekend together...`;
+Let's enjoy our first ever weekend together, hoping it might unlock more opportunities to spend time with each other.
+Hang in there a little longer, babe,
+Questions will be answered, doubts will be clarified, clarity will come within reach, and the longing will soon subside...`;
 
   let el=document.getElementById("finalText");
   el.innerHTML="";
