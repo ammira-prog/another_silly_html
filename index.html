@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <title>Maiku x Mira VN</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <style>
 body{
@@ -22,6 +23,7 @@ body{
   align-items:center;
   justify-content:center;
   padding:20px;
+  box-sizing:border-box;
   text-align:center;
 }
 
@@ -67,6 +69,7 @@ canvas{
   background:#333;
   border-radius:10px;
   overflow:hidden;
+  margin:0 auto;
 }
 
 #fill{
@@ -75,54 +78,86 @@ canvas{
   background:limegreen;
 }
 
+#finalText{
+  max-width:650px;
+  padding:20px;
+  line-height:1.8;
+}
+
 #finalText p{
   opacity:0;
-  transform:translateY(20px);
+  transform:translateY(18px);
   transition:1s;
   white-space:pre-line;
+}
+
+#bridgeOverlay{
+  display:none;
+  position:absolute;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:#111;
+  color:#fff;
+  font-size:22px;
+  justify-content:center;
+  align-items:center;
 }
 </style>
 </head>
 
 <body>
 
-<!-- SCENE 0 -->
 <div id="s0" class="scene active">
   <img src="image1.jpg">
   <p>Maiku and Mira enter the portal...</p>
   <button onclick="go(1)">Start</button>
 </div>
 
-<!-- SCENE 1 -->
 <div id="s1" class="scene">
-  <h3>Answer to unlock the message</h3>
-  <h2 id="qtext"></h2>
+  <h4>Sydney — Split Timeline</h4>
+  <p>Answer the following questions correctly.</p>
+
+  <h3 id="qtext"></h3>
   <div class="options" id="options"></div>
+
   <button onclick="submit()">Submit</button>
 </div>
 
-<!-- SCENE 2 -->
 <div id="s2" class="scene">
   <img src="image2.jpg">
-  <p><b>Drive safely to reach the bridge.</b></p>
-  <canvas id="game2" width="300" height="400"></canvas>
-  <p>Time: <span id="time">30</span></p>
+
+  <div id="driveIntro">
+    <p><b>Get to the Sydney bridge safely before time runs out.</b></p>
+    <button onclick="startDrive()">Start Drive</button>
+  </div>
+
+  <div id="driveGame" style="display:none;">
+    <canvas id="game2" width="300" height="400"></canvas>
+    <p>Time: <span id="time">30</span></p>
+  </div>
 </div>
 
-<!-- SCENE 3 -->
-<div id="s3" class="scene">
-  <img src="image3.jpg">
-  <p><b>Cross the bridge.</b></p>
+<div id="s3" class="scene" style="position:relative;">
 
-  <div id="bar"><div id="fill"></div></div>
+  <div id="bridgeIntro">
+    <img src="image3.jpg">
+    <h3>🌉 Bridge Crossing Mission</h3>
+    <button onclick="startBridge()">Start Crossing</button>
+  </div>
 
-  <p>Stamina: <span id="staminaText">100</span></p>
-  <p>Time: <span id="time3">25</span></p>
+  <div id="bridgeGame" style="display:none;">
+    <div id="bar"><div id="fill"></div></div>
 
-  <button onclick="smooch()">💖 Action</button>
+    <img src="image3_avatar.png" style="width:240px;height:240px;border-radius:12px;">
+
+    <button onclick="smooch()">💖 SMOOCH</button>
+
+    <p>Time Left: <span id="time3">25</span></p>
+
+    <div id="bridgeOverlay"></div>
+  </div>
 </div>
 
-<!-- SCENE 4 -->
 <div id="s4" class="scene">
   <img src="image4.jpg">
   <div id="finalText"></div>
@@ -134,12 +169,18 @@ canvas{
 function go(n){
   document.querySelectorAll(".scene").forEach(s=>s.classList.remove("active"));
   document.getElementById("s"+n).classList.add("active");
-
-  if(n===2) startDrive();
-  if(n===3) startBridge();
 }
 
 /* ================= SCENE 1 ================= */
+
+function shuffle(arr){
+  let a=[...arr];
+  for(let i=a.length-1;i>0;i--){
+    let j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
 
 let qs=[
 ["Mira ice cream?",["chocolate","strawberry","rocky road"],"chocolate"],
@@ -153,18 +194,14 @@ let qs=[
 
 let i=0, selected="";
 
-function shuffle(a){
-  return a.sort(()=>Math.random()-0.5);
-}
-
 function showQ(){
-  let q=qs[i];
+  const q=qs[i];
   document.getElementById("qtext").innerText=q[0];
 
-  let box=document.getElementById("options");
+  const box=document.getElementById("options");
   box.innerHTML="";
 
-  shuffle([...q[1]]).forEach(opt=>{
+  shuffle(q[1]).forEach(opt=>{
     let d=document.createElement("div");
     d.className="card";
     d.innerText=opt;
@@ -175,44 +212,60 @@ function showQ(){
 
 function submit(){
   if(!selected) return;
+  if(selected!==qs[i][2]) return;
 
-  if(selected===qs[i][2]){
-    i++;
-    selected="";
-    if(i>=qs.length){
-      go(2);
-    } else showQ();
+  selected="";
+  i++;
+
+  if(i>=qs.length){
+    go(2);
+    return;
   }
+
+  showQ();
 }
 
 showQ();
 
-/* ================= SCENE 2 ================= */
+/* ================= DRIVING ================= */
 
-let carX=120, obs=[], run=false, ctx, time=30, driveInterval;
+let carX=120, obs=[], run=false, ctx, time=30;
+let driveInterval=null;
+let anim=null;
 
 function startDrive(){
+
+  stopDrive();
+
+  document.getElementById("driveIntro").style.display="none";
+  document.getElementById("driveGame").style.display="block";
+
+  ctx=document.getElementById("game2").getContext("2d");
 
   run=true;
   time=30;
   carX=120;
 
-  ctx=document.getElementById("game2").getContext("2d");
-
   obs=[
     {x:50,y:-80},
     {x:120,y:-160},
-    {x:200,y:-240}
+    {x:200,y:-240},
+    {x:80,y:-320}
   ];
 
   driveInterval=setInterval(()=>{
+
+    if(!run) return;
+
     time--;
     document.getElementById("time").innerText=time;
 
     if(time<=0){
       stopDrive();
+      resetDrive();
       go(3);
     }
+
   },1000);
 
   loop();
@@ -221,21 +274,39 @@ function startDrive(){
 function stopDrive(){
   run=false;
   clearInterval(driveInterval);
+  driveInterval=null;
+  if(anim) cancelAnimationFrame(anim);
+  anim=null;
 }
 
 function crash(){
   stopDrive();
-  setTimeout(()=>startDrive(),500);
+  setTimeout(()=>{
+    resetDrive();
+  },300);
+}
+
+function resetDrive(){
+  stopDrive();
+
+  carX=120;
+  obs=[];
+  time=30;
+
+  document.getElementById("driveIntro").style.display="block";
+  document.getElementById("driveGame").style.display="none";
 }
 
 document.getElementById("game2").addEventListener("click",(e)=>{
   if(!run) return;
+
   let x=e.clientX-e.target.getBoundingClientRect().left;
   carX += (x<150?-20:20);
   carX=Math.max(0,Math.min(260,carX));
 });
 
 function loop(){
+
   if(!run) return;
 
   ctx.fillStyle="#111";
@@ -259,49 +330,67 @@ function loop(){
     }
   }
 
-  requestAnimationFrame(loop);
+  if(run && time<=10){
+    if(Math.random()<0.03){
+      obs.push({x:[60,120,180][Math.floor(Math.random()*3)], y:-30});
+    }
+  }
+
+  anim=requestAnimationFrame(loop);
 }
 
-/* ================= SCENE 3 ================= */
+/* ================= BRIDGE ================= */
 
-let stamina=100, time3=25, bridgeInterval;
+let stamina=100, time3=25;
+let bridgeInterval=null;
 
 function startBridge(){
+
+  clearInterval(bridgeInterval);
 
   stamina=100;
   time3=25;
 
-  document.getElementById("staminaText").innerText=stamina;
-  document.getElementById("fill").style.width="100%";
+  document.getElementById("bridgeIntro").style.display="none";
+  document.getElementById("bridgeGame").style.display="block";
+
+  document.getElementById("bridgeOverlay").style.display="none";
 
   bridgeInterval=setInterval(()=>{
 
     time3--;
-    stamina-=8;
+    stamina=Math.max(0, stamina-12);
 
-    document.getElementById("time3").innerText=time3;
-    document.getElementById("staminaText").innerText=stamina;
     document.getElementById("fill").style.width=stamina+"%";
+    document.getElementById("time3").innerText=time3;
 
     if(stamina<=0){
-      restartBridge();
+      failBridge("MIRA FAINTED 💔");
     }
 
     if(time3<=0){
-      stopBridge();
+      clearInterval(bridgeInterval);
       showFinal();
     }
 
   },1000);
 }
 
-function restartBridge(){
-  clearInterval(bridgeInterval);
-  setTimeout(()=>startBridge(),500);
-}
+function failBridge(msg){
 
-function stopBridge(){
   clearInterval(bridgeInterval);
+
+  const overlay=document.getElementById("bridgeOverlay");
+
+  overlay.style.display="flex";
+  overlay.innerHTML=msg;
+
+  setTimeout(()=>{
+    overlay.style.display="none";
+    stamina=100;
+    time3=25;
+    startBridge();
+  },2000);
 }
 
 function smooch(){
@@ -317,7 +406,8 @@ function showFinal(){
   let el=document.getElementById("finalText");
   el.innerHTML="";
 
-  let text=`This is the beginning of our adventure together,
+  let text =
+`This is the beginning of our adventure together,
 No pressure, no expectations~
 Let's enjoy our first ever weekend together, hoping it might unlock more opportunities to spend time with each other.
 Hang in there a little longer, babe,
@@ -328,10 +418,12 @@ Questions will be answered, doubts will be clarified...`;
 
   el.appendChild(p);
 
-  setTimeout(()=>{
-    p.style.opacity="1";
-    p.style.transform="translateY(0)";
-  },100);
+  requestAnimationFrame(()=>{
+    setTimeout(()=>{
+      p.style.opacity="1";
+      p.style.transform="translateY(0)";
+    },50);
+  });
 }
 
 </script>
