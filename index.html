@@ -27,9 +27,7 @@ body{
   text-align:center;
 }
 
-.scene.active{
-  display:flex;
-}
+.scene.active{ display:flex; }
 
 img{
   width:min(90vw,520px);
@@ -42,7 +40,6 @@ img{
 button{
   padding:10px 14px;
   margin:8px;
-  cursor:pointer;
   font-size:16px;
 }
 
@@ -51,7 +48,6 @@ button{
   flex-wrap:wrap;
   justify-content:center;
   gap:10px;
-  max-width:600px;
 }
 
 .card{
@@ -73,12 +69,14 @@ canvas{
   background:#333;
   border-radius:10px;
   overflow:hidden;
+  margin:0 auto;
 }
 
 #fill{
   height:100%;
   width:100%;
   background:limegreen;
+  transition:width 0.2s linear;
 }
 
 #finalText{
@@ -90,7 +88,7 @@ canvas{
 #finalText p{
   opacity:0;
   transform:translateY(18px);
-  transition:1.2s;
+  transition:1s;
   white-space:pre-line;
 }
 </style>
@@ -98,34 +96,43 @@ canvas{
 
 <body>
 
-<!-- AUDIO LAYER -->
-<audio id="bgm" loop></audio>
-<audio id="sfx"></audio>
+<!-- AUDIO UNLOCK -->
+<script>
+document.addEventListener("click", () => {}, { once:true });
+</script>
 
 <!-- SCENES -->
 
 <div id="s0" class="scene active">
   <img src="image1.jpg">
   <p>Maiku and Mira enter the portal...</p>
-  <button onclick="go(1); playSFX('click.mp3'); playBGM('portal.mp3')">Start</button>
+  <button onclick="go(1); playSFX()">Start</button>
 </div>
 
 <div id="s1" class="scene">
   <h4>Sydney — Split Timeline</h4>
-  <p>Answer the following questions correctly.</p>
+
+  <p>
+    After entering the portal, Maiku and Mira landed in different locations across Sydney.
+    He must find her before time runs out.
+  </p>
+
+  <p><b>Answer the following questions correctly.</b></p>
 
   <h3 id="qtext"></h3>
   <div class="options" id="options"></div>
 
-  <button onclick="submit(); playSFX('click.mp3')">Submit</button>
+  <button onclick="submit(); playSFX()">Submit</button>
 </div>
 
 <div id="s2" class="scene">
   <img src="image2.jpg">
 
   <div id="driveIntro">
+    <p><b>Get to the Sydney bridge safely before time runs out.</b></p>
     <p>Passenger Princess mode activated</p>
-    <button onclick="startDrive(); playSFX('click.mp3'); playBGM('drive.mp3')">Start Drive</button>
+    <p style="opacity:0.8;font-size:14px;">Tap LEFT or RIGHT to steer 🚗</p>
+    <button onclick="startDrive(); playSFX()">Start Drive</button>
   </div>
 
   <div id="driveGame" style="display:none;">
@@ -139,8 +146,10 @@ canvas{
   <div id="bridgeIntro">
     <img src="image3.jpg">
     <h3>🌉 Bridge Crossing Mission</h3>
-    <p>Get to the Sydney bridge safely before time runs out.</p>
-    <button onclick="startBridge(); playSFX('click.mp3'); playBGM('bridge.mp3')">Start Crossing</button>
+
+    <p><b>Instructions:</b> Keep stamina up by tapping 💖 SMOOCH</p>
+
+    <button onclick="startBridge(); playSFX()">Start Crossing</button>
   </div>
 
   <div id="bridgeGame" style="display:none;">
@@ -148,7 +157,7 @@ canvas{
 
     <img src="image3_avatar.png" style="width:240px;height:240px;border-radius:12px;">
 
-    <button onclick="smooch(); playSFX('click.mp3')">💖 SMOOCH</button>
+    <button onclick="smooch(); playSFX()">💖 SMOOCH</button>
 
     <p>Time Left: <span id="time3">25</span></p>
   </div>
@@ -159,25 +168,27 @@ canvas{
   <div id="finalText"></div>
 </div>
 
+<!-- AUDIO -->
 <script>
+const bgm = new Audio();
+bgm.loop = true;
 
-/* AUDIO */
-const bgm = document.getElementById("bgm");
-const sfx = document.getElementById("sfx");
-
-function playBGM(file){
-  if(!file) return;
-  bgm.src = file;
+function playBGM(src){
+  if(!src) return;
+  bgm.pause();
+  bgm.src = src;
   bgm.volume = 0.4;
   bgm.play().catch(()=>{});
 }
 
-function playSFX(file){
-  if(!file) return;
-  sfx.src = file;
-  sfx.volume = 0.6;
-  sfx.play().catch(()=>{});
+function playSFX(){
+  const s = new Audio("click.mp3");
+  s.volume = 0.7;
+  s.play().catch(()=>{});
 }
+</script>
+
+<script>
 
 /* NAV */
 function go(n){
@@ -196,15 +207,14 @@ let qs=[
 ["Likes about Maiku?",["all of the above","brain","humor"],"all of the above"]
 ];
 
-let i=0;
-let selected="";
+let i=0, selected="";
 
 function showQ(){
-  const q=qs[i];
-  document.getElementById("qtext").innerText=q[0];
+  const q = qs[i];
+  document.getElementById("qtext").innerText = q[0];
 
-  const box=document.getElementById("options");
-  box.innerHTML="";
+  const box = document.getElementById("options");
+  box.innerHTML = "";
 
   q[1].forEach(opt=>{
     let d=document.createElement("div");
@@ -222,7 +232,7 @@ function submit(){
   selected="";
   i++;
 
-  if(i>=qs.length){
+  if(i >= qs.length){
     go(2);
     return;
   }
@@ -233,12 +243,7 @@ function submit(){
 showQ();
 
 /* SCENE 2 */
-let carX=120;
-let obs=[];
-let run=false;
-let ctx;
-let time=30;
-let driveInterval=null;
+let carX=120, obs=[], run=false, ctx, time=30, driveInterval;
 
 function startDrive(){
 
@@ -261,27 +266,31 @@ function startDrive(){
     {x:180,y:-560}
   ];
 
-  if(driveInterval) clearInterval(driveInterval);
-
+  clearInterval(driveInterval);
   driveInterval=setInterval(()=>{
     if(!run) return;
 
     time--;
     document.getElementById("time").innerText=time;
 
-    if(time<=0){
-      resetDrive();
-      go(3);
-    }
+    if(time<=0) crash();
   },1000);
 
   loop();
 }
 
-function resetDrive(){
+function crash(){
   run=false;
   clearInterval(driveInterval);
 
+  setTimeout(()=>{
+    resetDrive();
+    go(3);
+  },300);
+}
+
+function resetDrive(){
+  run=false;
   carX=120;
   obs=[];
   time=30;
@@ -317,9 +326,7 @@ function loop(){
     ctx.fillRect(o.x,o.y,30,30);
 
     if(o.y>320 && o.y<360 && o.x<carX+40 && o.x+30>carX){
-      playSFX("crash.mp3");
-      resetDrive();
-      go(3);
+      crash();
       return;
     }
   }
@@ -328,19 +335,16 @@ function loop(){
 }
 
 /* SCENE 3 */
-let stamina=100;
-let time3=25;
-let bridgeInterval=null;
+let stamina=100, time3=25, bridgeInterval;
 
 function startBridge(){
-
   stamina=100;
   time3=25;
 
   document.getElementById("bridgeIntro").style.display="none";
   document.getElementById("bridgeGame").style.display="block";
 
-  if(bridgeInterval) clearInterval(bridgeInterval);
+  clearInterval(bridgeInterval);
 
   bridgeInterval=setInterval(()=>{
     time3--;
@@ -349,9 +353,8 @@ function startBridge(){
     document.getElementById("fill").style.width=stamina+"%";
     document.getElementById("time3").innerText=time3;
 
-    if(time3<=0){
+    if(stamina<=0 || time3<=0){
       clearInterval(bridgeInterval);
-      playSFX("success.mp3");
       showFinal();
     }
   },1000);
@@ -361,7 +364,7 @@ function smooch(){
   stamina=Math.min(100, stamina+15);
 }
 
-/* FINAL */
+/* FINAL (LOCKED) */
 function showFinal(){
 
   go(4);
