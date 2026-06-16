@@ -15,6 +15,7 @@ body{
   overflow:hidden;
 }
 
+/* SCENES */
 .scene{
   display:none;
   height:100vh;
@@ -26,7 +27,6 @@ body{
   box-sizing:border-box;
   text-align:center;
 }
-
 .scene.active{ display:flex; }
 
 img{
@@ -37,6 +37,28 @@ img{
   margin-bottom:10px;
 }
 
+/* SCENE 0 EFFECT */
+#s0 img{
+  animation:portalZoom 2.5s ease-out forwards;
+}
+
+#s0 p{
+  opacity:0;
+  animation:fadeText 2s ease forwards;
+  animation-delay:1.5s;
+}
+
+@keyframes portalZoom{
+  from{ transform:scale(1.2); filter:brightness(0); }
+  to{ transform:scale(1); filter:brightness(1); }
+}
+
+@keyframes fadeText{
+  from{ opacity:0; transform:translateY(10px); }
+  to{ opacity:1; transform:translateY(0); }
+}
+
+/* UI */
 button{
   padding:10px 14px;
   margin:8px;
@@ -58,11 +80,13 @@ button{
   min-width:120px;
 }
 
+/* CANVAS */
 canvas{
   background:#111;
   border-radius:8px;
 }
 
+/* BAR */
 #bar{
   width:80%;
   height:16px;
@@ -71,19 +95,18 @@ canvas{
   overflow:hidden;
   margin:0 auto;
 }
-
 #fill{
   height:100%;
   width:100%;
   background:limegreen;
 }
 
+/* FINAL TEXT */
 #finalText{
   max-width:650px;
   padding:20px;
   line-height:1.8;
 }
-
 #finalText p{
   opacity:0;
   transform:translateY(18px);
@@ -91,29 +114,19 @@ canvas{
   white-space:pre-line;
 }
 
-/* hearts */
-.heart{
-  position:absolute;
-  font-size:20px;
-  animation:floatUp 1s ease-out forwards;
-  pointer-events:none;
-}
-
-@keyframes floatUp{
-  0%{opacity:1; transform:translateY(0);}
-  100%{opacity:0; transform:translateY(-60px);}
-}
-
-#bridgeOverlay{
+/* OVERLAYS */
+.overlay{
   display:none;
   position:absolute;
   top:0;left:0;
   width:100%;height:100%;
-  background:#111;
+  background:rgba(0,0,0,0.85);
   color:#fff;
-  font-size:22px;
+  font-size:28px;
   justify-content:center;
   align-items:center;
+  flex-direction:column;
+  z-index:999;
 }
 </style>
 </head>
@@ -130,12 +143,6 @@ canvas{
 <!-- SCENE 1 -->
 <div id="s1" class="scene">
   <h4>Sydney — Split Timeline</h4>
-
-  <p>
-  Maiku and Mira have landed in different locations after passing through the portal.<br>
-  Separated across timelines, they must reconnect by decoding memory fragments.
-  </p>
-
   <p>Answer the following questions correctly.</p>
 
   <h3 id="qtext"></h3>
@@ -146,16 +153,11 @@ canvas{
 
 <!-- SCENE 2 -->
 <div id="s2" class="scene">
-
   <img src="image2.jpg">
 
   <div id="driveIntro">
     <p><b>Passenger Princess Mode Unlocked.</b></p>
-    <p>
-      Maiku has taken the wheel.<br>
-      Mira is now safely on board — but the journey is far from over.
-    </p>
-    <p><b>Get to the Sydney bridge safely before time runs out.</b></p>
+    <p>Get to the Sydney bridge safely before time runs out.</p>
     <button onclick="startDrive()">Start Drive</button>
   </div>
 
@@ -163,23 +165,20 @@ canvas{
     <canvas id="game2" width="300" height="400"></canvas>
     <p>Time: <span id="time">30</span></p>
   </div>
+
+  <div id="transition2" class="overlay"></div>
 </div>
 
 <!-- SCENE 3 -->
 <div id="s3" class="scene" style="position:relative;">
-
   <div id="bridgeIntro">
     <img src="image3.jpg">
     <h3>🌉 Bridge Crossing Mission</h3>
-    <p>
-      Help Mira overcome her fear of heights and cross the bridge safely.<br>
-      Tap 💖 SMOOCH to restore stamina.
-    </p>
+    <p>Help Mira overcome fear of heights. Tap 💖 SMOOCH to restore stamina.</p>
     <button onclick="startBridge()">Start Crossing</button>
   </div>
 
   <div id="bridgeGame" style="display:none;">
-
     <div id="bar"><div id="fill"></div></div>
 
     <img src="image3_avatar.png" style="width:240px;height:240px;border-radius:12px;">
@@ -188,7 +187,8 @@ canvas{
 
     <p>Time Left: <span id="time3">25</span></p>
 
-    <div id="bridgeOverlay"></div>
+    <div id="bridgeOverlay" class="overlay"></div>
+    <div id="successPopup" class="overlay">SUCCESS</div>
   </div>
 </div>
 
@@ -204,16 +204,6 @@ canvas{
 function go(n){
   document.querySelectorAll(".scene").forEach(s=>s.classList.remove("active"));
   document.getElementById("s"+n).classList.add("active");
-}
-
-/* SHUFFLE */
-function shuffle(arr){
-  let a=[...arr];
-  for(let i=a.length-1;i>0;i--){
-    let j=Math.floor(Math.random()*(i+1));
-    [a[i],a[j]]=[a[j],a[i]];
-  }
-  return a;
 }
 
 /* SCENE 1 */
@@ -236,7 +226,7 @@ function showQ(){
   const box=document.getElementById("options");
   box.innerHTML="";
 
-  shuffle(q[1]).forEach(opt=>{
+  q[1].forEach(opt=>{
     let d=document.createElement("div");
     d.className="card";
     d.innerText=opt;
@@ -244,22 +234,15 @@ function showQ(){
     box.appendChild(d);
   });
 }
-
 function submit(){
   if(!selected) return;
   if(selected!==qs[i][2]) return;
 
   selected="";
   i++;
-
-  if(i>=qs.length){
-    go(2);
-    return;
-  }
-
+  if(i>=qs.length){ go(2); return; }
   showQ();
 }
-
 showQ();
 
 /* SCENE 2 */
@@ -268,7 +251,6 @@ let driveInterval=null;
 let anim=null;
 
 function startDrive(){
-
   stopDrive();
 
   document.getElementById("driveIntro").style.display="none";
@@ -295,8 +277,7 @@ function startDrive(){
 
     if(time<=0){
       stopDrive();
-      resetDrive();
-      go(3);
+      showTransition2();
     }
 
   },1000);
@@ -304,21 +285,25 @@ function startDrive(){
   loop();
 }
 
+function showTransition2(){
+  const t=document.getElementById("transition2");
+  t.style.display="flex";
+  t.innerHTML="<div><h1>SUCCESS</h1><p>They have reached the bridge safely.</p></div>";
+
+  setTimeout(()=>{
+    t.style.display="none";
+    resetDrive();
+    go(3);
+  },1500);
+}
+
 function stopDrive(){
   run=false;
   clearInterval(driveInterval);
-  driveInterval=null;
   if(anim) cancelAnimationFrame(anim);
-  anim=null;
-}
-
-function crash(){
-  stopDrive();
-  setTimeout(()=>resetDrive(),300);
 }
 
 function resetDrive(){
-  stopDrive();
   carX=120;
   obs=[];
   time=30;
@@ -327,54 +312,11 @@ function resetDrive(){
   document.getElementById("driveGame").style.display="none";
 }
 
-document.getElementById("game2").addEventListener("click",(e)=>{
-  if(!run) return;
-
-  let x=e.clientX-e.target.getBoundingClientRect().left;
-  carX += (x<150?-20:20);
-  carX=Math.max(0,Math.min(260,carX));
-});
-
-function loop(){
-
-  if(!run) return;
-
-  ctx.fillStyle="#111";
-  ctx.fillRect(0,0,300,400);
-
-  ctx.fillStyle="#333";
-  ctx.fillRect(50,0,200,400);
-
-  ctx.fillStyle="#00d4ff";
-  ctx.fillRect(carX,340,40,18);
-
-  ctx.fillStyle="red";
-
-  for(let o of obs){
-    o.y+=4;
-    ctx.fillRect(o.x,o.y,30,30);
-
-    if(o.y>320 && o.y<360 && o.x<carX+40 && o.x+30>carX){
-      crash();
-      return;
-    }
-  }
-
-  if(run && time<=10){
-    if(Math.random()<0.03){
-      obs.push({x:[60,120,180][Math.floor(Math.random()*3)], y:-30});
-    }
-  }
-
-  anim=requestAnimationFrame(loop);
-}
-
 /* SCENE 3 */
 let stamina=100, time3=25;
 let bridgeInterval=null;
 
 function startBridge(){
-
   clearInterval(bridgeInterval);
 
   stamina=100;
@@ -383,10 +325,7 @@ function startBridge(){
   document.getElementById("bridgeIntro").style.display="none";
   document.getElementById("bridgeGame").style.display="block";
 
-  document.getElementById("bridgeOverlay").style.display="none";
-
   bridgeInterval=setInterval(()=>{
-
     time3--;
     stamina=Math.max(0, stamina-12);
 
@@ -399,54 +338,44 @@ function startBridge(){
 
     if(time3<=0){
       clearInterval(bridgeInterval);
-      showFinal();
+
+      const s=document.getElementById("successPopup");
+      s.style.display="flex";
+
+      setTimeout(()=>{
+        s.style.display="none";
+        showFinal();
+      },1200);
     }
 
   },1000);
 }
 
 function failBridge(msg){
-
   clearInterval(bridgeInterval);
 
-  const overlay=document.getElementById("bridgeOverlay");
-  overlay.style.display="flex";
-  overlay.innerHTML=msg;
+  const o=document.getElementById("bridgeOverlay");
+  o.style.display="flex";
+  o.innerHTML=msg;
 
   setTimeout(()=>{
-    overlay.style.display="none";
-    stamina=100;
-    time3=25;
+    o.style.display="none";
     startBridge();
-  },2000);
+  },1500);
 }
 
 function smooch(){
-
   stamina=Math.min(100, stamina+10);
-
-  const heart=document.createElement("div");
-  heart.className="heart";
-  heart.innerText="💖";
-
-  document.getElementById("bridgeGame").appendChild(heart);
-
-  heart.style.left=(Math.random()*80+10)+"%";
-  heart.style.top="60%";
-
-  setTimeout(()=>heart.remove(),1000);
 }
 
 /* FINAL */
 function showFinal(){
-
   go(4);
 
   let el=document.getElementById("finalText");
   el.innerHTML="";
 
-  let text =
-`This is the beginning of our adventure together,
+  let text=`This is the beginning of our adventure together,
 No pressure, no expectations~
 Let's enjoy our first ever weekend together, hoping it might unlock more opportunities to spend time with each other.
 Hang in there a little longer, babe,
@@ -454,7 +383,6 @@ Questions will be answered, doubts will be clarified, and longing will subside.`
 
   let p=document.createElement("p");
   p.innerText=text;
-
   el.appendChild(p);
 
   requestAnimationFrame(()=>{
@@ -466,6 +394,5 @@ Questions will be answered, doubts will be clarified, and longing will subside.`
 }
 
 </script>
-
 </body>
 </html>
