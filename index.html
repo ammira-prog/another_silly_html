@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <title>Maiku x Mira VN</title>
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <style>
@@ -37,84 +36,32 @@ img{
   margin-bottom:10px;
 }
 
-/* SCENE 0 EFFECT */
+/* PORTAL FX (SCENE 0 ADDITION) */
 #s0 img{
   animation:portalZoom 2.5s ease-out forwards;
 }
-
-#s0 p{
-  opacity:0;
-  animation:fadeText 2s ease forwards;
-  animation-delay:1.5s;
-}
-
 @keyframes portalZoom{
-  from{ transform:scale(1.2); filter:brightness(0); }
-  to{ transform:scale(1); filter:brightness(1); }
-}
-
-@keyframes fadeText{
-  from{ opacity:0; transform:translateY(10px); }
-  to{ opacity:1; transform:translateY(0); }
+  from{transform:scale(1.2);filter:brightness(0);}
+  to{transform:scale(1);filter:brightness(1);}
 }
 
 /* UI */
-button{
-  padding:10px 14px;
-  margin:8px;
-  font-size:16px;
-}
-
-.options{
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
-  gap:10px;
-}
-
-.card{
-  background:#222;
-  padding:10px;
-  border-radius:8px;
-  cursor:pointer;
-  min-width:120px;
-}
+button{padding:10px 14px;margin:8px;font-size:16px;}
+.options{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;}
+.card{background:#222;padding:10px;border-radius:8px;cursor:pointer;min-width:120px;}
 
 /* CANVAS */
-canvas{
-  background:#111;
-  border-radius:8px;
-}
+canvas{background:#111;border-radius:8px;}
 
 /* BAR */
-#bar{
-  width:80%;
-  height:16px;
-  background:#333;
-  border-radius:10px;
-  overflow:hidden;
-  margin:0 auto;
-}
-#fill{
-  height:100%;
-  width:100%;
-  background:limegreen;
-}
+#bar{width:80%;height:16px;background:#333;border-radius:10px;overflow:hidden;margin:0 auto;}
+#fill{height:100%;width:100%;background:limegreen;}
 
-/* FINAL TEXT */
-#finalText{
-  max-width:650px;
-  padding:20px;
-  line-height:1.8;
-}
-#finalText p{
-  opacity:0;
-  transform:translateY(18px);
-  transition:1s;
-  white-space:pre-line;
-}
+/* FINAL */
+#finalText{max-width:650px;padding:20px;line-height:1.8;}
+#finalText p{opacity:0;transform:translateY(18px);transition:1s;white-space:pre-line;}
 
-/* OVERLAYS */
+/* OVERLAY */
 .overlay{
   display:none;
   position:absolute;
@@ -127,6 +74,17 @@ canvas{
   align-items:center;
   flex-direction:column;
   z-index:999;
+}
+
+/* HEART FX */
+.heart{
+  position:absolute;
+  font-size:20px;
+  animation:floatUp 1s ease-out forwards;
+}
+@keyframes floatUp{
+  0%{opacity:1;transform:translateY(0);}
+  100%{opacity:0;transform:translateY(-60px);}
 }
 </style>
 </head>
@@ -143,11 +101,9 @@ canvas{
 <!-- SCENE 1 -->
 <div id="s1" class="scene">
   <h4>Sydney — Split Timeline</h4>
-  <p>Answer the following questions correctly.</p>
-
+  <p>Answer the following correctly.</p>
   <h3 id="qtext"></h3>
   <div class="options" id="options"></div>
-
   <button onclick="submit()">Submit</button>
 </div>
 
@@ -157,7 +113,7 @@ canvas{
 
   <div id="driveIntro">
     <p><b>Passenger Princess Mode Unlocked.</b></p>
-    <p>Get to the Sydney bridge safely before time runs out.</p>
+    <p>Get to the bridge safely before time runs out.</p>
     <button onclick="startDrive()">Start Drive</button>
   </div>
 
@@ -170,11 +126,11 @@ canvas{
 </div>
 
 <!-- SCENE 3 -->
-<div id="s3" class="scene" style="position:relative;">
+<div id="s3" class="scene">
   <div id="bridgeIntro">
     <img src="image3.jpg">
-    <h3>🌉 Bridge Crossing Mission</h3>
-    <p>Help Mira overcome fear of heights. Tap 💖 SMOOCH to restore stamina.</p>
+    <h3>Bridge Crossing Mission</h3>
+    <p>Help Mira overcome fear of heights. Tap SMOOCH to restore stamina.</p>
     <button onclick="startBridge()">Start Crossing</button>
   </div>
 
@@ -184,11 +140,9 @@ canvas{
     <img src="image3_avatar.png" style="width:240px;height:240px;border-radius:12px;">
 
     <button onclick="smooch()">💖 SMOOCH</button>
-
     <p>Time Left: <span id="time3">25</span></p>
 
     <div id="bridgeOverlay" class="overlay"></div>
-    <div id="successPopup" class="overlay">SUCCESS</div>
   </div>
 </div>
 
@@ -223,10 +177,12 @@ function showQ(){
   const q=qs[i];
   document.getElementById("qtext").innerText=q[0];
 
+  let opts=[...q[1]].sort(()=>Math.random()-0.5);
+
   const box=document.getElementById("options");
   box.innerHTML="";
 
-  q[1].forEach(opt=>{
+  opts.forEach(opt=>{
     let d=document.createElement("div");
     d.className="card";
     d.innerText=opt;
@@ -234,59 +190,49 @@ function showQ(){
     box.appendChild(d);
   });
 }
-function submit(){
-  if(!selected) return;
-  if(selected!==qs[i][2]) return;
 
+function submit(){
+  if(selected!==qs[i][2]) return;
   selected="";
   i++;
   if(i>=qs.length){ go(2); return; }
   showQ();
 }
+
 showQ();
 
 /* SCENE 2 */
-let carX=120, obs=[], run=false, ctx, time=30;
-let driveInterval=null;
-let anim=null;
+let carX=120, obs=[], run=false, ctx, time=30, driveInterval, anim;
 
 function startDrive(){
   stopDrive();
-
   document.getElementById("driveIntro").style.display="none";
   document.getElementById("driveGame").style.display="block";
 
   ctx=document.getElementById("game2").getContext("2d");
-
   run=true;
   time=30;
-  carX=120;
 
   obs=[
-    {x:50,y:-80},
-    {x:120,y:-160},
-    {x:200,y:-240},
-    {x:80,y:-320}
+    {x:50,y:-80},{x:120,y:-160},
+    {x:200,y:-240},{x:80,y:-320}
   ];
 
   driveInterval=setInterval(()=>{
-    if(!run) return;
-
     time--;
     document.getElementById("time").innerText=time;
 
     if(time<=0){
-      stopDrive();
       showTransition2();
     }
-
   },1000);
 
   loop();
 }
 
 function showTransition2(){
-  const t=document.getElementById("transition2");
+  stopDrive();
+  let t=document.getElementById("transition2");
   t.style.display="flex";
   t.innerHTML="<div><h1>SUCCESS</h1><p>They have reached the bridge safely.</p></div>";
 
@@ -294,31 +240,28 @@ function showTransition2(){
     t.style.display="none";
     resetDrive();
     go(3);
-  },1500);
+  },1200);
 }
 
 function stopDrive(){
   run=false;
   clearInterval(driveInterval);
-  if(anim) cancelAnimationFrame(anim);
+  cancelAnimationFrame(anim);
 }
 
 function resetDrive(){
   carX=120;
   obs=[];
   time=30;
-
   document.getElementById("driveIntro").style.display="block";
   document.getElementById("driveGame").style.display="none";
 }
 
 /* SCENE 3 */
-let stamina=100, time3=25;
-let bridgeInterval=null;
+let stamina=100, time3=25, bridgeInterval;
 
 function startBridge(){
   clearInterval(bridgeInterval);
-
   stamina=100;
   time3=25;
 
@@ -332,65 +275,54 @@ function startBridge(){
     document.getElementById("fill").style.width=stamina+"%";
     document.getElementById("time3").innerText=time3;
 
-    if(stamina<=0){
-      failBridge("MIRA FAINTED 💔");
-    }
-
     if(time3<=0){
       clearInterval(bridgeInterval);
-
-      const s=document.getElementById("successPopup");
-      s.style.display="flex";
-
-      setTimeout(()=>{
-        s.style.display="none";
-        showFinal();
-      },1200);
+      showFinal();
     }
 
+    if(stamina<=0){
+      failBridge();
+    }
   },1000);
 }
 
-function failBridge(msg){
+function failBridge(){
   clearInterval(bridgeInterval);
-
-  const o=document.getElementById("bridgeOverlay");
+  let o=document.getElementById("bridgeOverlay");
   o.style.display="flex";
-  o.innerHTML=msg;
-
-  setTimeout(()=>{
-    o.style.display="none";
-    startBridge();
-  },1500);
+  o.innerHTML="MIRA FAINTED 💔";
+  setTimeout(()=>startBridge(),1500);
 }
 
+/* HEART FX */
 function smooch(){
   stamina=Math.min(100, stamina+10);
+
+  let h=document.createElement("div");
+  h.className="heart";
+  h.innerText="💖";
+
+  document.getElementById("bridgeGame").appendChild(h);
+
+  setTimeout(()=>h.remove(),900);
 }
 
 /* FINAL */
 function showFinal(){
   go(4);
-
   let el=document.getElementById("finalText");
-  el.innerHTML="";
 
   let text=`This is the beginning of our adventure together,
 No pressure, no expectations~
-Let's enjoy our first ever weekend together, hoping it might unlock more opportunities to spend time with each other.
-Hang in there a little longer, babe,
+Let's enjoy our first ever weekend together,
 Questions will be answered, doubts will be clarified, and longing will subside.`;
 
   let p=document.createElement("p");
   p.innerText=text;
+  el.innerHTML="";
   el.appendChild(p);
 
-  requestAnimationFrame(()=>{
-    setTimeout(()=>{
-      p.style.opacity="1";
-      p.style.transform="translateY(0)";
-    },50);
-  });
+  setTimeout(()=>{p.style.opacity="1";p.style.transform="translateY(0)";},100);
 }
 
 </script>
