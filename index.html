@@ -102,6 +102,7 @@ canvas{background:#111;border-radius:8px;}
 <!-- SCENE 1 -->
 <div id="s1" class="scene">
   <h4>Sydney — Split Timeline</h4>
+  <p><b>Maiku and Mira landed on separate locations.</b></p>
   <p><b>Maiku needs to find Mira as soon as possible.</b></p>
   <p><b>Answer correctly to unlock the key to Model 3.</b></p>
 
@@ -171,13 +172,13 @@ function go(n){
 /* ================= SCENE 1 ================= */
 
 let qs=[
-["Mira ice cream?",["chocolate","strawberry","rocky road"],"chocolate"],
+["Mira's fave ice cream?",["chocolate","strawberry","rocky road"],"chocolate"],
 ["Comfort dish?",["soupy dishes","chicken","sushi"],"soupy dishes"],
 ["Fast food?",["pizza","burger","tacos"],"pizza"],
 ["Expression?",["ayioo","omg","wtf"],"ayioo"],
 ["Subject?",["math","history","language"],"math"],
 ["Overthinking?",["keep quiet","talk more","sleep"],"keep quiet"],
-["Likes about Maiku?",["all of the above","brain","humor"],"all of the above"]
+["Likes about Maiku?",["all of the above","brain","humor","charm"],"all of the above"]
 ];
 
 let i=0, selected="";
@@ -413,7 +414,9 @@ function showFinal(){
 `This is the beginning of our adventure together,
 No pressure, no expectations~
 Let's enjoy our first ever weekend together,
-Questions will be answered, doubts will be clarified, and longing will subside.`;
+Hang in there, babe~ Questions will be
+answered, doubts will be clarified, and longing 
+will subside..`;
 
   let p=document.createElement("p");
   p.innerText=text;
