@@ -35,15 +35,8 @@ img{
   margin-bottom:10px;
 }
 
-#s0 img{
-  animation:portalZoom 2.5s ease-out forwards;
-}
-@keyframes portalZoom{
-  from{transform:scale(1.2);filter:brightness(0);}
-  to{transform:scale(1);filter:brightness(1);}
-}
-
 button{padding:10px 14px;margin:8px;font-size:16px;}
+
 .options{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;}
 .card{background:#222;padding:10px;border-radius:8px;cursor:pointer;min-width:120px;}
 
@@ -94,21 +87,30 @@ canvas{background:#111;border-radius:8px;}
   transition:1s;
   white-space:pre-line;
 }
+
+/* portal effect */
+#s0 img{
+  animation:portalZoom 2.5s ease-out forwards;
+}
+@keyframes portalZoom{
+  from{transform:scale(1.2);filter:brightness(0);}
+  to{transform:scale(1);filter:brightness(1);}
+}
 </style>
 </head>
 
 <body>
 
-<!-- SCENES -->
+<!-- SCENE 0 -->
 <div id="s0" class="scene active">
   <img src="image1.jpg">
   <p>Maiku and Mira enter the portal...</p>
   <button onclick="go(1)">Start</button>
 </div>
 
+<!-- SCENE 1 -->
 <div id="s1" class="scene">
   <h4>Sydney — Split Timeline</h4>
-  <p><b>Maiku and Mira landed on different spots in Sydney.</b></p>
   <p><b>Maiku needs to find Mira as soon as possible.</b></p>
   <p><b>Answer these questions correctly to gain access to the key to the Model 3.</b></p>
 
@@ -117,12 +119,12 @@ canvas{background:#111;border-radius:8px;}
   <button onclick="submit()">Submit</button>
 </div>
 
+<!-- SCENE 2 -->
 <div id="s2" class="scene">
   <img src="image2.jpg">
 
   <div id="driveIntro">
     <p><b>Passenger Princess Mode Unlocked.</b></p>
-    <p>Get to the bridge safely before time runs out.</p>
     <button onclick="startDrive()">Start Drive</button>
   </div>
 
@@ -134,12 +136,13 @@ canvas{background:#111;border-radius:8px;}
   <div id="transition2" class="overlay"></div>
 </div>
 
+<!-- SCENE 3 -->
 <div id="s3" class="scene">
   <div id="bridgeIntro">
     <img src="image3.jpg">
     <h3>Bridge Crossing Mission</h3>
-    <p>Help Mira overcome fear of heights. Tap SMOOCH to restore stamina.</p>
-    <button onclick="startBridge()">Start Crossing</button>
+    <p>Tap SMOOCH to restore stamina.</p>
+    <button onclick="startBridge()">Start</button>
   </div>
 
   <div id="bridgeGame" style="display:none;">
@@ -151,6 +154,7 @@ canvas{background:#111;border-radius:8px;}
   </div>
 </div>
 
+<!-- SCENE 4 -->
 <div id="s4" class="scene">
   <img src="image4.jpg">
   <div id="finalText"></div>
@@ -187,7 +191,7 @@ function showQ(){
   box.innerHTML = "";
 
   opts.forEach(opt=>{
-    let d = document.createElement("div");
+    let d=document.createElement("div");
     d.className="card";
     d.innerText=opt;
     d.onclick=()=>selected=opt;
@@ -196,7 +200,7 @@ function showQ(){
 }
 
 function submit(){
-  if(selected !== qs[i][2]) return;
+  if(selected!==qs[i][2]) return;
   selected="";
   i++;
   if(i>=qs.length){ go(2); return; }
@@ -237,7 +241,6 @@ function startDrive(){
     time--;
     document.getElementById("time").innerText=time;
 
-    /* 🚗 DIFFICULTY SPIKES */
     if(time===20){
       obs.push({x:100,y:-200},{x:220,y:-260});
     }
@@ -252,18 +255,45 @@ function startDrive(){
 
   },1000);
 
-  loop();
+  requestAnimationFrame(loop);
 }
 
-/* 🔧 RESTORED CONTROLS */
+/* CONTROLS */
 document.getElementById("game2").addEventListener("click",(e)=>{
   if(!run) return;
-
   let x=e.clientX-e.target.getBoundingClientRect().left;
-
   carX += (x<150?-20:20);
   carX=Math.max(0,Math.min(260,carX));
 });
+
+function loop(){
+
+  if(!run) return;
+
+  ctx.fillStyle="#111";
+  ctx.fillRect(0,0,300,400);
+
+  ctx.fillStyle="#333";
+  ctx.fillRect(50,0,200,400);
+
+  ctx.fillStyle="#00d4ff";
+  ctx.fillRect(carX,340,40,18);
+
+  ctx.fillStyle="red";
+
+  for(let o of obs){
+    o.y+=4;
+    ctx.fillRect(o.x,o.y,30,30);
+
+    if(o.y>320 && o.y<360 && o.x<carX+40 && o.x+30>carX){
+      stopDrive();
+      resetDrive();
+      return;
+    }
+  }
+
+  anim=requestAnimationFrame(loop);
+}
 
 function showTransition2(){
 
@@ -271,7 +301,7 @@ function showTransition2(){
 
   let t=document.getElementById("transition2");
   t.style.display="flex";
-  t.innerHTML="<div><h1>SUCCESS</h1><p>They have reached the bridge safely.</p></div>";
+  t.innerHTML="<div><h1>SUCCESS</h1><p>Bridge reached safely.</p></div>";
 
   setTimeout(()=>{
     t.style.display="none";
@@ -328,15 +358,15 @@ function endBridgeSuccess(){
 
   let o=document.getElementById("bridgeOverlay");
   o.style.display="flex";
-  o.innerHTML="<div><h1>SUCCESS</h1><p>They crossed the bridge safely.</p></div>";
+  o.innerHTML="<h1>SUCCESS</h1>";
 
   setTimeout(()=>{
     o.style.display="none";
     go(4);
+    showFinal();
   },1200);
 }
 
-/* 🔧 FIXED: no more stuck state */
 function failBridge(){
 
   clearInterval(bridgeInterval);
@@ -346,39 +376,19 @@ function failBridge(){
   o.innerHTML="MIRA FAINTED 💔";
 
   setTimeout(()=>{
-
     stamina=100;
     time3=25;
-
     document.getElementById("fill").style.width="100%";
     document.getElementById("time3").innerText=time3;
-
     o.style.display="none";
-
     document.getElementById("bridgeIntro").style.display="block";
     document.getElementById("bridgeGame").style.display="none";
-
   },1500);
-}
-
-/* HEART FX */
-function smooch(){
-
-  stamina=Math.min(100,stamina+10);
-
-  let h=document.createElement("div");
-  h.className="heart";
-  h.innerText="💖";
-
-  document.getElementById("bridgeGame").appendChild(h);
-  setTimeout(()=>h.remove(),900);
 }
 
 /* ================= FINAL ================= */
 
 function showFinal(){
-
-  go(4);
 
   let el=document.getElementById("finalText");
 
