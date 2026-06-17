@@ -87,15 +87,6 @@ canvas{background:#111;border-radius:8px;}
   transition:1s;
   white-space:pre-line;
 }
-
-/* portal effect */
-#s0 img{
-  animation:portalZoom 2.5s ease-out forwards;
-}
-@keyframes portalZoom{
-  from{transform:scale(1.2);filter:brightness(0);}
-  to{transform:scale(1);filter:brightness(1);}
-}
 </style>
 </head>
 
@@ -112,7 +103,7 @@ canvas{background:#111;border-radius:8px;}
 <div id="s1" class="scene">
   <h4>Sydney — Split Timeline</h4>
   <p><b>Maiku needs to find Mira as soon as possible.</b></p>
-  <p><b>Answer these questions correctly to gain access to the key to the Model 3.</b></p>
+  <p><b>Answer correctly to unlock the key to Model 3.</b></p>
 
   <h3 id="qtext"></h3>
   <div class="options" id="options"></div>
@@ -121,10 +112,15 @@ canvas{background:#111;border-radius:8px;}
 
 <!-- SCENE 2 -->
 <div id="s2" class="scene">
+
   <img src="image2.jpg">
 
+  <!-- FIX 1: RESTORED INSTRUCTION BLOCK -->
   <div id="driveIntro">
-    <p><b>Passenger Princess Mode Unlocked.</b></p>
+    <p><b>Passenger Princess Mode Unlocked</b></p>
+    <p>⬅ Tap LEFT side to move left</p>
+    <p>➡ Tap RIGHT side to move right</p>
+    <p>Avoid obstacles and reach the bridge</p>
     <button onclick="startDrive()">Start Drive</button>
   </div>
 
@@ -138,17 +134,22 @@ canvas{background:#111;border-radius:8px;}
 
 <!-- SCENE 3 -->
 <div id="s3" class="scene">
+
   <div id="bridgeIntro">
     <img src="image3.jpg">
     <h3>Bridge Crossing Mission</h3>
-    <p>Tap SMOOCH to restore stamina.</p>
+    <p>Help Mira overcome fear of heights</p>
+    <p>Tap SMOOCH to restore stamina 💖</p>
     <button onclick="startBridge()">Start</button>
   </div>
 
   <div id="bridgeGame" style="display:none;">
     <div id="bar"><div id="fill"></div></div>
     <img src="image3_avatar.png" style="width:240px;height:240px;border-radius:12px;">
-    <button onclick="smooch()">💖 SMOOCH</button>
+    
+    <!-- FIX 2: explicit button binding guaranteed -->
+    <button id="smoochBtn">💖 SMOOCH</button>
+
     <p>Time Left: <span id="time3">25</span></p>
     <div id="bridgeOverlay" class="overlay"></div>
   </div>
@@ -301,7 +302,7 @@ function showTransition2(){
 
   let t=document.getElementById("transition2");
   t.style.display="flex";
-  t.innerHTML="<div><h1>SUCCESS</h1><p>Bridge reached safely.</p></div>";
+  t.innerHTML="<h1>SUCCESS</h1><p>Bridge reached safely</p>";
 
   setTimeout(()=>{
     t.style.display="none";
@@ -350,6 +351,9 @@ function startBridge(){
     if(stamina<=0) failBridge();
 
   },1000);
+
+  /* FIX: ensure button always bound */
+  document.getElementById("smoochBtn").onclick = smooch;
 }
 
 function endBridgeSuccess(){
@@ -386,6 +390,19 @@ function failBridge(){
   },1500);
 }
 
+/* HEART FX */
+function smooch(){
+
+  stamina=Math.min(100,stamina+10);
+
+  let h=document.createElement("div");
+  h.className="heart";
+  h.innerText="💖";
+
+  document.getElementById("bridgeGame").appendChild(h);
+  setTimeout(()=>h.remove(),900);
+}
+
 /* ================= FINAL ================= */
 
 function showFinal(){
@@ -412,4 +429,4 @@ Questions will be answered, doubts will be clarified, and longing will subside.`
 
 </script>
 </body>
-</html>
+  </html>
