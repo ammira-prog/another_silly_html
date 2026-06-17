@@ -36,7 +36,7 @@ img{
   margin-bottom:10px;
 }
 
-/* PORTAL FX (SCENE 0 ADDITION) */
+/* PORTAL EFFECT (kept) */
 #s0 img{
   animation:portalZoom 2.5s ease-out forwards;
 }
@@ -50,16 +50,34 @@ button{padding:10px 14px;margin:8px;font-size:16px;}
 .options{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;}
 .card{background:#222;padding:10px;border-radius:8px;cursor:pointer;min-width:120px;}
 
-/* CANVAS */
 canvas{background:#111;border-radius:8px;}
 
-/* BAR */
-#bar{width:80%;height:16px;background:#333;border-radius:10px;overflow:hidden;margin:0 auto;}
-#fill{height:100%;width:100%;background:limegreen;}
+#bar{
+  width:80%;
+  height:16px;
+  background:#333;
+  border-radius:10px;
+  overflow:hidden;
+  margin:0 auto;
+}
+#fill{
+  height:100%;
+  width:100%;
+  background:limegreen;
+}
 
-/* FINAL */
-#finalText{max-width:650px;padding:20px;line-height:1.8;}
-#finalText p{opacity:0;transform:translateY(18px);transition:1s;white-space:pre-line;}
+/* FINAL TEXT */
+#finalText{
+  max-width:650px;
+  padding:20px;
+  line-height:1.8;
+}
+#finalText p{
+  opacity:0;
+  transform:translateY(18px);
+  transition:1s;
+  white-space:pre-line;
+}
 
 /* OVERLAY */
 .overlay{
@@ -101,7 +119,13 @@ canvas{background:#111;border-radius:8px;}
 <!-- SCENE 1 -->
 <div id="s1" class="scene">
   <h4>Sydney — Split Timeline</h4>
-  <p>Answer the following correctly.</p>
+
+  <p><b>Maiku and Mira have landed in different parts of the city.</b></p>
+  <p>Separated by an unknown force, their memories are fragmented across timelines.</p>
+  <p>Only correct answers will synchronize their paths.</p>
+
+  <p><b>Answer the following correctly.</b></p>
+
   <h3 id="qtext"></h3>
   <div class="options" id="options"></div>
   <button onclick="submit()">Submit</button>
@@ -160,7 +184,8 @@ function go(n){
   document.getElementById("s"+n).classList.add("active");
 }
 
-/* SCENE 1 */
+/* ================= SCENE 1 ================= */
+
 let qs=[
 ["Mira ice cream?",["chocolate","strawberry","rocky road"],"chocolate"],
 ["Comfort dish?",["soupy dishes","chicken","sushi"],"soupy dishes"],
@@ -174,55 +199,65 @@ let qs=[
 let i=0, selected="";
 
 function showQ(){
-  const q=qs[i];
-  document.getElementById("qtext").innerText=q[0];
+  const q = qs[i];
+  document.getElementById("qtext").innerText = q[0];
 
-  let opts=[...q[1]].sort(()=>Math.random()-0.5);
+  let opts = [...q[1]].sort(()=>Math.random()-0.5);
 
-  const box=document.getElementById("options");
-  box.innerHTML="";
+  const box = document.getElementById("options");
+  box.innerHTML = "";
 
   opts.forEach(opt=>{
-    let d=document.createElement("div");
-    d.className="card";
-    d.innerText=opt;
-    d.onclick=()=>selected=opt;
+    let d = document.createElement("div");
+    d.className = "card";
+    d.innerText = opt;
+    d.onclick = ()=>selected = opt;
     box.appendChild(d);
   });
 }
 
 function submit(){
-  if(selected!==qs[i][2]) return;
+  if(selected !== qs[i][2]) return;
   selected="";
   i++;
-  if(i>=qs.length){ go(2); return; }
+  if(i >= qs.length){ go(2); return; }
   showQ();
 }
 
 showQ();
 
-/* SCENE 2 */
-let carX=120, obs=[], run=false, ctx, time=30, driveInterval, anim;
+/* ================= SCENE 2 ================= */
+
+let carX=120, obs=[], run=false, ctx, time=30;
+let driveInterval, anim;
 
 function startDrive(){
+
   stopDrive();
+
   document.getElementById("driveIntro").style.display="none";
   document.getElementById("driveGame").style.display="block";
 
-  ctx=document.getElementById("game2").getContext("2d");
-  run=true;
-  time=30;
+  ctx = document.getElementById("game2").getContext("2d");
 
-  obs=[
-    {x:50,y:-80},{x:120,y:-160},
-    {x:200,y:-240},{x:80,y:-320}
+  run = true;
+  time = 30;
+  carX = 120;
+
+  obs = [
+    {x:50,y:-80},
+    {x:120,y:-160},
+    {x:200,y:-240},
+    {x:80,y:-320},
+    {x:160,y:-420},
+    {x:40,y:-520}
   ];
 
-  driveInterval=setInterval(()=>{
+  driveInterval = setInterval(()=>{
     time--;
-    document.getElementById("time").innerText=time;
+    document.getElementById("time").innerText = time;
 
-    if(time<=0){
+    if(time <= 0){
       showTransition2();
     }
   },1000);
@@ -232,9 +267,10 @@ function startDrive(){
 
 function showTransition2(){
   stopDrive();
-  let t=document.getElementById("transition2");
-  t.style.display="flex";
-  t.innerHTML="<div><h1>SUCCESS</h1><p>They have reached the bridge safely.</p></div>";
+
+  let t = document.getElementById("transition2");
+  t.style.display = "flex";
+  t.innerHTML = "<div><h1>SUCCESS</h1><p>They have reached the bridge safely.</p></div>";
 
   setTimeout(()=>{
     t.style.display="none";
@@ -257,48 +293,100 @@ function resetDrive(){
   document.getElementById("driveGame").style.display="none";
 }
 
-/* SCENE 3 */
+function loop(){
+
+  if(!run || !ctx) return;
+
+  ctx.fillStyle="#111";
+  ctx.fillRect(0,0,300,400);
+
+  ctx.fillStyle="#333";
+  ctx.fillRect(50,0,200,400);
+
+  ctx.fillStyle="#00d4ff";
+  ctx.fillRect(carX,340,40,18);
+
+  ctx.fillStyle="red";
+
+  for(let o of obs){
+
+    o.y += 4;
+    ctx.fillRect(o.x,o.y,30,30);
+
+    if(o.y > 320 && o.y < 360 && o.x < carX+40 && o.x+30 > carX){
+      stopDrive();
+      resetDrive();
+      return;
+    }
+  }
+
+  anim = requestAnimationFrame(loop);
+}
+
+/* ================= SCENE 3 ================= */
+
 let stamina=100, time3=25, bridgeInterval;
 
 function startBridge(){
+
   clearInterval(bridgeInterval);
+
   stamina=100;
   time3=25;
 
   document.getElementById("bridgeIntro").style.display="none";
   document.getElementById("bridgeGame").style.display="block";
 
-  bridgeInterval=setInterval(()=>{
+  bridgeInterval = setInterval(()=>{
+
     time3--;
-    stamina=Math.max(0, stamina-12);
+    stamina = Math.max(0, stamina-12);
 
-    document.getElementById("fill").style.width=stamina+"%";
-    document.getElementById("time3").innerText=time3;
+    document.getElementById("fill").style.width = stamina+"%";
+    document.getElementById("time3").innerText = time3;
 
-    if(time3<=0){
-      clearInterval(bridgeInterval);
-      showFinal();
+    if(time3 <= 0){
+      endBridgeSuccess();
     }
 
-    if(stamina<=0){
+    if(stamina <= 0){
       failBridge();
     }
+
   },1000);
 }
 
-function failBridge(){
+function endBridgeSuccess(){
+
   clearInterval(bridgeInterval);
-  let o=document.getElementById("bridgeOverlay");
+
+  let o = document.getElementById("bridgeOverlay");
+  o.style.display="flex";
+  o.innerHTML="<div><h1>SUCCESS</h1><p>They crossed the bridge safely.</p></div>";
+
+  setTimeout(()=>{
+    o.style.display="none";
+    go(4);
+    showFinal();
+  },1200);
+}
+
+function failBridge(){
+
+  clearInterval(bridgeInterval);
+
+  let o = document.getElementById("bridgeOverlay");
   o.style.display="flex";
   o.innerHTML="MIRA FAINTED 💔";
+
   setTimeout(()=>startBridge(),1500);
 }
 
 /* HEART FX */
 function smooch(){
-  stamina=Math.min(100, stamina+10);
+  stamina = Math.min(100, stamina+10);
 
-  let h=document.createElement("div");
+  let h = document.createElement("div");
   h.className="heart";
   h.innerText="💖";
 
@@ -307,24 +395,33 @@ function smooch(){
   setTimeout(()=>h.remove(),900);
 }
 
-/* FINAL */
-function showFinal(){
-  go(4);
-  let el=document.getElementById("finalText");
+/* ================= FINAL ================= */
 
-  let text=`This is the beginning of our adventure together,
+function showFinal(){
+
+  go(4);
+
+  let el = document.getElementById("finalText");
+
+  let text =
+`This is the beginning of our adventure together,
 No pressure, no expectations~
 Let's enjoy our first ever weekend together,
 Questions will be answered, doubts will be clarified, and longing will subside.`;
 
-  let p=document.createElement("p");
-  p.innerText=text;
+  let p = document.createElement("p");
+  p.innerText = text;
+
   el.innerHTML="";
   el.appendChild(p);
 
-  setTimeout(()=>{p.style.opacity="1";p.style.transform="translateY(0)";},100);
+  setTimeout(()=>{
+    p.style.opacity="1";
+    p.style.transform="translateY(0)";
+  },100);
 }
 
 </script>
+
 </body>
 </html>
